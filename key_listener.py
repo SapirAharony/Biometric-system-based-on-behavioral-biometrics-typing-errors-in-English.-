@@ -37,16 +37,20 @@ class RealTimeKeyListener:
         self.mouse_listener.start()
         self.keyboard_listener.join()
         self.mouse_listener.join()
-        
+
     def __on_press(self, key):
         print("\n\n\nSentence: ", self.__sentence)
         print('position: ', self.__position)
-        self.__insert_key(key)
+        if (hasattr(key, 'char') and key.char is not None and len(key.char) < 2) or (key in Combinations.NUMPAD_NUMBERS or key == keyboard.Key.space):
+            self.__insert_key(key)
+        elif key == keyboard.Key.left and abs(self.__position) <= len(self.__sentence):
+            self.__position -= 1
+        elif key == keyboard.Key.right and self.__position < 0:
+            self.__position += 1
 
     def __on_click(self, x, y, button, pressed):
         self.__count_clicks(button)
         if pressed and button == mouse.Button.left:
-            # print("Clicked: ", button)
             self.__left_button_mouse_is_pressed = True
 
     def __count_clicks(self, button):
@@ -60,6 +64,8 @@ class RealTimeKeyListener:
         char = ''
         if hasattr(key, 'char') and key.char is not None and len(key.char) < 2:
             char = key.char
+        elif key in Combinations.NUMPAD_NUMBERS or key == keyboard.Key.space:
+            char = key._value_.char
         if char is not None:
             if self.__position == 0:
                 self.__sentence += char
