@@ -3,7 +3,6 @@ import json
 # listeners
 import pynput.keyboard as keyboard
 import pynput.mouse as mouse
-import os
 import nltk.data
 import System_features_extractor as s_f_extractor
 
@@ -36,6 +35,13 @@ class RealTimeKeyListener:
         self.mouse_listener = mouse.Listener(on_click=self.__on_click)
         self.keyboard_listener.start()
         self.mouse_listener.start()
+        self.keyboard_listener.join()
+        self.mouse_listener.join()
+        
+    def __on_press(self, key):
+        print("\n\n\nSentence: ", self.__sentence)
+        print('position: ', self.__position)
+        self.__insert_key(key)
 
     def __on_click(self, x, y, button, pressed):
         self.__count_clicks(button)
@@ -50,25 +56,34 @@ class RealTimeKeyListener:
         else:
             self.__keys_counter[str(button)] += 1
 
+    def __insert_key(self, key):
+        char = ''
+        if hasattr(key, 'char') and key.char is not None and len(key.char) < 2:
+            char = key.char
+        if char is not None:
+            if self.__position == 0:
+                self.__sentence += char
+            else:
+                self.__sentence = self.__sentence[:self.__position] + char + self.__sentence[self.__position:]
 
-def add_dict_list_to_json_file(path_to_file, key, obj):
-    # check if is empty
-    if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
-        data = s_f_extractor.read_json_file(path_to_file)
-        open(path_to_file, 'w').close()
-        file = open(path_to_file, 'a+')
-        if isinstance(obj, dict) and obj.keys() and key in data.keys():
-            for k in obj.keys():
-                if k not in data[key].keys():
-                    data[key][k] = obj[k]
-                elif k in data[key].keys() and (isinstance(data[key][k], int) or isinstance(data[key][k], float)):
-                    data[key][k] += obj[k]
 
-        elif key in data.keys() and isinstance(obj, list) and obj and isinstance(data[key], list):
-            data[key].extend(obj)
-        else:
-            data[key] = obj
-            file.seek(0)
-        json.dump(data, file, indent=4)
-        file.close()
-
+# def add_dict_list_to_json_file(path_to_file, key, obj):
+#     # check if is empty
+#     if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
+#         data = s_f_extractor.read_json_file(path_to_file)
+#         open(path_to_file, 'w').close()
+#         file = open(path_to_file, 'a+')
+#         if isinstance(obj, dict) and obj.keys() and key in data.keys():
+#             for k in obj.keys():
+#                 if k not in data[key].keys():
+#                     data[key][k] = obj[k]
+#                 elif k in data[key].keys() and (isinstance(data[key][k], int) or isinstance(data[key][k], float)):
+#                     data[key][k] += obj[k]
+#
+#         elif key in data.keys() and isinstance(obj, list) and obj and isinstance(data[key], list):
+#             data[key].extend(obj)
+#         else:
+#             data[key] = obj
+#             file.seek(0)
+#         json.dump(data, file, indent=4)
+#         file.close()

@@ -201,16 +201,3 @@ class Word:
     def get_word(self, word):
         return word
 
-# str_1, str_2 = 'string', 'tsran'
-# distances = Distances(str_1, str_2)
-# print(distances.__dict__)
-# print(distances.type_of_lev_operations)
-
-# featureextr = FeatureExtractor()
-# sentence = 'Misspelled words, typing errors and grama mistakes distract from the effectiveness of your message.'
-# print(featureextr.correct_spelling_txt_blb(sentence))
-#
-# print()
-# __word_tokenizer = nltk.tokenize.RegexpTokenizer('[\s,:/\'\"]', gaps=True)
-# __list_of_words = ListOfWords(__word_tokenizer.tokenize(sentence))
-# print(__word_tokenizer.tokenize(sentence))
