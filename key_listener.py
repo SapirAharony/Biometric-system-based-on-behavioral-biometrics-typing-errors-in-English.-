@@ -38,20 +38,32 @@ class RealTimeKeyListener:
         self.keyboard_listener.join()
         self.mouse_listener.join()
 
-    def __on_press(self, key):
-        print("\n\n\nSentence: ", self.__sentence)
-        print('position: ', self.__position)
-        if (hasattr(key, 'char') and key.char is not None and len(key.char) < 2) or (key in Combinations.NUMPAD_NUMBERS or key == keyboard.Key.space):
-            self.__insert_key(key)
-        elif key == keyboard.Key.left and abs(self.__position) <= len(self.__sentence):
-            self.__position -= 1
-        elif key == keyboard.Key.right and self.__position < 0:
-            self.__position += 1
-
     def __on_click(self, x, y, button, pressed):
         self.__count_clicks(button)
         if pressed and button == mouse.Button.left:
             self.__left_button_mouse_is_pressed = True
+
+    def __on_press(self, key):
+        """A method which is called whenever user presses a key. It checks type of typing key and call other functions,
+         whenever definded trigger happens."""
+        print("\n\n\nSentence: ", self.__sentence)
+        print('position: ', self.__position)
+
+        if key == keyboard.Key.delete and self.__sentence and self.__position != 0:
+            self.__delete_chars()
+
+        elif key == keyboard.Key.backspace and self.__sentence:
+            self.__backspace_chars()
+
+        elif key == keyboard.Key.left and abs(self.__position) <= len(self.__sentence):
+            self.__position -= 1
+
+        elif key == keyboard.Key.right and self.__position < 0:
+            self.__position += 1
+
+        elif (hasattr(key, 'char') and key.char is not None and len(key.char) < 2) or (
+                key in Combinations.NUMPAD_NUMBERS or key == keyboard.Key.space):
+            self.__insert_key(key)
 
     def __count_clicks(self, button):
         """A method that adds each mouse button click to dictionary collecting each click event."""
@@ -59,6 +71,23 @@ class RealTimeKeyListener:
             self.__keys_counter[str(button)] = 1
         else:
             self.__keys_counter[str(button)] += 1
+
+    def __delete_chars(self):
+        """A method which is called whenever user presses 'delete' key to delete chars from current writting sentence"""
+        # or list of word if left mouse key wasn't pressed before """
+        if self.__position < -1:
+            self.__sentence = self.__sentence[:self.__position] + self.__sentence[self.__position + 1:]
+        elif self.__position == -1:
+            self.__sentence = self.__sentence[:-1]
+        self.__position += 1
+
+    def __backspace_chars(self):
+        """A Method which is called whenever user presses 'backspace' key to delete chars from sentence """
+        # or list of word if left mouse key wasn't pressed before """
+        if self.__position == 0:
+            self.__sentence = self.__sentence[:-1]
+        elif self.__position < 0:
+            self.__sentence = self.__sentence[:self.__position - 1] + self.__sentence[self.__position:]
 
     def __insert_key(self, key):
         char = ''
@@ -71,7 +100,6 @@ class RealTimeKeyListener:
                 self.__sentence += char
             else:
                 self.__sentence = self.__sentence[:self.__position] + char + self.__sentence[self.__position:]
-
 
 # def add_dict_list_to_json_file(path_to_file, key, obj):
 #     # check if is empty
