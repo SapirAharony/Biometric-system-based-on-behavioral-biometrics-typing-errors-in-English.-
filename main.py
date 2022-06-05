@@ -1,9 +1,10 @@
-from key_listener import RealTimeKeyListener
-
-real_time_listener = RealTimeKeyListener()
+# from key_listener import RealTimeKeyListener
+#
+# real_time_listener = RealTimeKeyListener()
 
 # position = -100
-# sentence = 'testowe działanie aplikacji'
+sentence = 'testowe działanie aplikacji'
+print(sentence.split())
 # print(sentence)
 # print(sentence[:-1])
 # sentence = sentence[:position-1] + sentence[position:]

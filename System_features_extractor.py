@@ -140,6 +140,9 @@ class Word:
     def __init__(self, word):
         self.__word = word
 
+    def __str__(self):
+        return self.__word + " " + self.__lemmatized_word + " " + self.__corrected_word_txt_blb + " " + self.__distances_txt_blb
+
     def get_word(self, word):
         return word
 
@@ -155,6 +158,8 @@ class ListOfWords:
 
     def __init__(self, sentence):
         self.sentence = sentence
+        for word in self.sentence.split():
+            word.apped(Word(word))
         self.__add_by_left_click = False
 
     def set_update_pos_tags(self):

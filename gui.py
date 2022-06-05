@@ -23,8 +23,7 @@ def press_end_combination():
     controler = keyboard.Controller()
     controler.press(keyboard.Key.esc)
     controler.press(keyboard.Key.f4)
-    # controler.press(keyboard.Key.esc)
-    # controler.press(keyboard.Key.f4)
+
 
 def on_stop():
     global listener
@@ -36,7 +35,6 @@ def on_stop():
         listener.keyboard_listener.join()
         listener.mouse_listener.join()
         listener = None
-        # to inform that listener doesn't exist
     else:
         tkinter.messagebox.showwarning(title=title, message="Listener IS NOT running!")
 

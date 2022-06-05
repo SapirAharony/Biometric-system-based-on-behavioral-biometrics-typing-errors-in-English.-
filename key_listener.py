@@ -65,6 +65,8 @@ class RealTimeKeyListener:
                 key in Combinations.NUMPAD_NUMBERS_KEYS or key == keyboard.Key.space):
             self.__insert_key(key)
 
+        self.__previous_key = key
+
     def __on_finished_context(self, key):
         """ Method that checks add list of words to file whenever the NEW_CONTEXT_KEYS or  combination is entered."""
         pass
