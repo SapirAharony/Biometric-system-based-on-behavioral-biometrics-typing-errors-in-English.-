@@ -7,7 +7,6 @@ import nltk
 import Levenshtein
 
 
-
 class Distances:
     levenshtein_distance = 0
     type_of_lev_operations = {"insert": 0,
@@ -90,63 +89,6 @@ def get_freq_word(list_of_words, freq_dict):
     return freq_dict
 
 
-class ListOfWords:
-    """ A class which includes words, which are separated by NEXT_WORD_COMBINATION"""
-    __add_by_left_click = False
-    words = []
-    pos_tags = []
-    is_from_file = False
-
-    def __init__(self, list_of_words=list()):
-        self.words = list_of_words
-        # for word in self.words:
-        #     self.list_of_words_objects.append(Word(word))
-        self.__add_by_left_click = False
-
-    def set_update_pos_tags(self):
-        self.pos_tags = nltk.pos_tag(self.words)
-
-    def __str__(self):
-        return 'words: ' + " ".join(self.words) + '\nAdd by left click: ' + str(
-            self.__add_by_left_click) + '\nIs from file: ' + str(self.is_from_file)
-
-    # def __repr__(self):
-    #     return 'words: ' + " ".join(self.words) + '\nAdd by left click: ' + str(
-    #         self.__add_by_left_click) + '\nIs from file: ' + str(self.is_from_file)
-
-    def set_left_click(self, value):
-        if value:
-            self.__add_by_left_click = True
-        elif not value:
-            self.__add_by_left_click = False
-
-    def get_click(self):
-        return self.__add_by_left_click
-
-    def clear_list(self):
-        self.__add_by_left_click = False
-        self.words.clear()
-
-    def write_list_of_words_to_json_file(self, path_to_file, key, dictionary):
-        self.set_update_pos_tags()
-        if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
-            # open file
-            data = read_json_file(path_to_file)
-            print('data', data, type(data))
-            # clear file
-            open(path_to_file, 'w').close()
-            # add data
-            file = open(path_to_file, 'a+')
-            data[key].append(dictionary)
-            file.seek(0)
-            json.dump(data, file, indent=4)
-        else:
-            file = open(path_to_file, 'w+')
-            tmp = {key: [dictionary]}
-            json.dump(tmp, file, indent=4)
-        file.close()
-
-
 def read_json_file(path_to_file):
     with open(path_to_file, 'r') as f:
         data = json.load(f)
@@ -201,3 +143,55 @@ class Word:
     def get_word(self, word):
         return word
 
+
+class ListOfWords:
+    """ A class which includes words, which are separated by NEXT_WORD_COMBINATION"""
+    __add_by_left_click = False
+    __sentence = ''
+    words = []
+    pos_tags = []
+    is_from_file = False
+    feature_extractor = FeatureExtractor
+
+    def __init__(self, sentence):
+        self.sentence = sentence
+        self.__add_by_left_click = False
+
+    def set_update_pos_tags(self):
+        self.pos_tags = nltk.pos_tag(self.words)
+
+    def __str__(self):
+        return 'words: ' + " ".join(self.words) + '\nAdd by left click: ' + str(
+            self.__add_by_left_click) + '\nIs from file: ' + str(self.is_from_file)
+
+    def set_left_click(self, value):
+        if value:
+            self.__add_by_left_click = True
+        elif not value:
+            self.__add_by_left_click = False
+
+    def get_click(self):
+        return self.__add_by_left_click
+
+    def clear_list(self):
+        self.__add_by_left_click = False
+        self.words.clear()
+
+    def write_list_of_words_to_json_file(self, path_to_file, key, dictionary):
+        self.set_update_pos_tags()
+        if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
+            # open file
+            data = read_json_file(path_to_file)
+            print('data', data, type(data))
+            # clear file
+            open(path_to_file, 'w').close()
+            # add data
+            file = open(path_to_file, 'a+')
+            data[key].append(dictionary)
+            file.seek(0)
+            json.dump(data, file, indent=4)
+        else:
+            file = open(path_to_file, 'w+')
+            tmp = {key: [dictionary]}
+            json.dump(tmp, file, indent=4)
+        file.close()

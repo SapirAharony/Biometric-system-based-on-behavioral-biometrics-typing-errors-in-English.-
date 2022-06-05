@@ -9,19 +9,19 @@ import System_features_extractor as s_f_extractor
 
 class Combinations:
     """A class which includes key combinations or sets of keys."""
-    END_COMBINATION = [keyboard.Key.esc, keyboard.Key.f4]  # key combination to finish listening
+    END_KEYS = [keyboard.Key.esc, keyboard.Key.f4]  # key combination to finish listening
     NEXT_WORD_KEYS = [keyboard.Key.space, ':', ",", "/", '"']  # key of next words
     NEW_CONTEXT_KEYS = [keyboard.Key.down, keyboard.Key.up]  # , keyboard.Key.dot},
-    SENTENCE_END = [keyboard.Key.enter, ".", ";", '?', '!']
-    NUMPAD_NUMBERS = [keyboard.Key.n_zero, keyboard.Key.n_one, keyboard.Key.n_two,
-                      keyboard.Key.n_three, keyboard.Key.n_four,
-                      keyboard.Key.n_five, keyboard.Key.n_six, keyboard.Key.n_seven,
-                      keyboard.Key.n_eight, keyboard.Key.n_nine]
+    SENTENCE_END_KEYS = [keyboard.Key.enter, ".", ";", '?', '!']
+    NUMPAD_NUMBERS_KEYS = [keyboard.Key.n_zero, keyboard.Key.n_one, keyboard.Key.n_two,
+                           keyboard.Key.n_three, keyboard.Key.n_four,
+                           keyboard.Key.n_five, keyboard.Key.n_six, keyboard.Key.n_seven,
+                           keyboard.Key.n_eight, keyboard.Key.n_nine]
 
 
 class RealTimeKeyListener:
     __left_button_mouse_is_pressed = False
-    __position = 0
+    __position = 0  # parameter is <=0
     __previous_key = None
     __sentence = ""
     __list_of_words = None
@@ -48,7 +48,7 @@ class RealTimeKeyListener:
          whenever definded trigger happens."""
         print("\n\n\nSentence: ", self.__sentence)
         print('position: ', self.__position)
-
+        self. is_finished(key)
         if key == keyboard.Key.delete and self.__sentence and self.__position != 0:
             self.__delete_chars()
 
@@ -62,8 +62,20 @@ class RealTimeKeyListener:
             self.__position += 1
 
         elif (hasattr(key, 'char') and key.char is not None and len(key.char) < 2) or (
-                key in Combinations.NUMPAD_NUMBERS or key == keyboard.Key.space):
+                key in Combinations.NUMPAD_NUMBERS_KEYS or key == keyboard.Key.space):
             self.__insert_key(key)
+
+    def __on_finished_context(self, key):
+        """ Method that checks add list of words to file whenever the NEW_CONTEXT_KEYS or  combination is entered."""
+        pass
+
+    def is_finished(self, key):
+        """A method that checks if the END KEY COMBINATION is clicked by user """
+        if self.__previous_key in Combinations.END_KEYS and key in Combinations.END_KEYS:
+            self.mouse_listener.stop()
+            self.keyboard_listener.stop()
+            print("Finished")
+
 
     def __count_clicks(self, button):
         """A method that adds each mouse button click to dictionary collecting each click event."""
@@ -93,13 +105,14 @@ class RealTimeKeyListener:
         char = ''
         if hasattr(key, 'char') and key.char is not None and len(key.char) < 2:
             char = key.char
-        elif key in Combinations.NUMPAD_NUMBERS or key == keyboard.Key.space:
+        elif key in Combinations.NUMPAD_NUMBERS_KEYS or key == keyboard.Key.space:
             char = key._value_.char
-        if char is not None:
+        if char is not None and char.isprintable():
             if self.__position == 0:
                 self.__sentence += char
             else:
                 self.__sentence = self.__sentence[:self.__position] + char + self.__sentence[self.__position:]
+
 
 # def add_dict_list_to_json_file(path_to_file, key, obj):
 #     # check if is empty
@@ -121,3 +134,4 @@ class RealTimeKeyListener:
 #             file.seek(0)
 #         json.dump(data, file, indent=4)
 #         file.close()
+
