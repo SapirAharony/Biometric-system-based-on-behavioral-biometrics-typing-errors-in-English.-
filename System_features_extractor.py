@@ -1,4 +1,6 @@
 # spell checker
+import os
+
 from spellchecker import SpellChecker
 from textblob import TextBlob
 import json
@@ -89,12 +91,6 @@ def get_freq_word(list_of_words, freq_dict):
     return freq_dict
 
 
-def read_json_file(path_to_file):
-    with open(path_to_file, 'r') as f:
-        data = json.load(f)
-    return data
-
-
 class FeatureExtractor:
     """ A class that  contains correctors, pos_tags"""
     spell_checker = SpellChecker()
@@ -150,18 +146,45 @@ class Word:
         return word
 
 
+def write_list_of_words_to_json_file(path_to_file, key, dictionary):
+    if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
+        # open file
+        data = read_json_file(path_to_file)
+        print('data', data, type(data))
+        # clear file
+        open(path_to_file, 'w').close()
+        # add data
+        file = open(path_to_file, 'a+')
+        data[key].append(dictionary)
+        file.seek(0)
+        json.dump(data, file, indent=4)
+    else:
+        file = open(path_to_file, 'w+')
+        tmp = {key: [dictionary]}
+        json.dump(tmp, file, indent=4)
+    file.close()
+
+def read_json_file(path_to_file):
+    with open(path_to_file, 'r') as f:
+        data = json.load(f)
+    return data
+
+
 class ListOfWords:
     """ A class which includes words, which are separated by NEXT_WORD_COMBINATION"""
+    sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[\s,:/\".;!?\n()[]{}\]', gaps=True)
+    # __word_tokenizer = nltk.tokenize.RegexpTokenizer('[\s,:/\".;!?\n{}\[\]()-+=_~`@#$%^&*]', gaps=True)
+
     __add_by_left_click = False
-    __sentence = ''
+    __original_sentence = ''
     words = []
     pos_tags = []
     is_from_file = False
     feature_extractor = FeatureExtractor
 
     def __init__(self, sentence):
-        self.sentence = sentence
-        for word in self.sentence.split():
+        self.__original_sentence = sentence
+        for word in self.sentence_tokenizer.tokenize(self.__original_sentence):
             self.words.append(Word(word))
         self.__add_by_left_click = False
 
@@ -182,21 +205,4 @@ class ListOfWords:
         self.__add_by_left_click = False
         self.words.clear()
 
-    # def write_list_of_words_to_json_file(self, path_to_file, key, dictionary):
-    #     self.set_update_pos_tags()
-    #     if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
-    #         # open file
-    #         data = read_json_file(path_to_file)
-    #         print('data', data, type(data))
-    #         # clear file
-    #         open(path_to_file, 'w').close()
-    #         # add data
-    #         file = open(path_to_file, 'a+')
-    #         data[key].append(dictionary)
-    #         file.seek(0)
-    #         json.dump(data, file, indent=4)
-    #     else:
-    #         file = open(path_to_file, 'w+')
-    #         tmp = {key: [dictionary]}
-    #         json.dump(tmp, file, indent=4)
-    #     file.close()
+

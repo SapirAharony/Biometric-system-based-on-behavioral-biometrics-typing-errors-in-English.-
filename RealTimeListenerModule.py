@@ -48,8 +48,8 @@ class RealTimeKeyListener:
     def __on_press(self, key):
         """A method which is called whenever user presses a key. It checks type of typing key and call other functions,
          whenever definded trigger happens."""
-        print("\n\n\nSentence: ", self.__sentence)
-        print('position: ', self.__position)
+        # print("\n\n\nSentence: ", self.__sentence)
+        # print('position: ', self.__position)
         self.__count_clicks(key)
         if self.__previous_key in Combinations.END_KEYS and key in Combinations.END_KEYS:
             self.__is_finished()
@@ -80,15 +80,15 @@ class RealTimeKeyListener:
         """ Method that checks add list of words to file whenever the NEW_CONTEXT_KEYS or  combination is entered."""
         if self.__position == 0:
             self.__list_of_words = SFExtractor.ListOfWords(self.__sentence)
-            # self.__list_of_words.write_to_file(self.destination
+            # self.__list_of_words.write_to_file(self.__destination_json_file_path)
             self.__sentence = ''
         else:
             self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[:self.__position])
-            # self.__list_of_words.write_to_file(self.destination
+            # self.__list_of_words.write_to_file(self.__destination_json_file_path)
             if self.__left_button_mouse_is_pressed or at_the_end:
                 self.__list_of_words = None
                 self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[self.__position:])
-                # self.__list_of_words.write_to_file(self.destination
+                # self.__list_of_words.write_to_file(self.__destination_json_file_path)
                 self.__sentence = ''
                 self.__position = 0
             else:
