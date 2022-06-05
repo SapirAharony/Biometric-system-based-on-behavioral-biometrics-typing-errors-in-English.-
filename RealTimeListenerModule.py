@@ -4,7 +4,7 @@ import json
 import pynput.keyboard as keyboard
 import pynput.mouse as mouse
 import nltk.data
-import System_features_extractor as s_f_extractor
+import System_features_extractor as SFExtractor
 
 
 class Combinations:
@@ -26,7 +26,7 @@ class RealTimeKeyListener:
     __sentence = ""
     __list_of_words = None
     __keys_counter = {}
-    __key_string_list = list()
+    __destination_json_file_path = "C:/Users/user/Desktop/destination_file.json"
     keyboard_listener = None
     mouse_listener = None
 
@@ -50,8 +50,9 @@ class RealTimeKeyListener:
          whenever definded trigger happens."""
         print("\n\n\nSentence: ", self.__sentence)
         print('position: ', self.__position)
+        self.__count_clicks(key)
         if self.__previous_key in Combinations.END_KEYS and key in Combinations.END_KEYS:
-            self. is_finished(key)
+            self.__is_finished()
 
         elif key in Combinations.SENTENCE_END_KEYS or key in Combinations.NEW_CONTEXT_KEYS or self.__left_button_mouse_is_pressed and self.__sentence:
             self.__on_finished_context()
@@ -75,28 +76,42 @@ class RealTimeKeyListener:
         self.__previous_key = key
         self.__left_button_mouse_is_pressed = False
 
-    def __on_finished_context(self):
+    def __on_finished_context(self, at_the_end=False):
         """ Method that checks add list of words to file whenever the NEW_CONTEXT_KEYS or  combination is entered."""
-        if self.__position == 0 and not self.__left_button_mouse_is_pressed:
+        if self.__position == 0:
+            self.__list_of_words = SFExtractor.ListOfWords(self.__sentence)
+            # self.__list_of_words.write_to_file(self.destination
             self.__sentence = ''
         else:
+            self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[:self.__position])
+            # self.__list_of_words.write_to_file(self.destination
+            if self.__left_button_mouse_is_pressed or at_the_end:
+                self.__list_of_words = None
+                self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[self.__position:])
+                # self.__list_of_words.write_to_file(self.destination
+                self.__sentence = ''
+                self.__position = 0
+            else:
+                self.__sentence = self.__sentence[self.__position:]
 
-            pass
+        self.__list_of_words = None
 
-    def is_finished(self, key):
+    def __is_finished(self):
         """A method that checks if the END KEY COMBINATION is clicked by user """
-        # if self.__sentence:
+        if self.__sentence:
+            self.__on_finished_context(at_the_end=True)
+        # zapisanie __keys_counter do pliku .json
 
         print("Finished")
         self.mouse_listener.stop()
         self.keyboard_listener.stop()
 
-    def __count_clicks(self, button):
+    def __count_clicks(self, click):
         """A method that adds each mouse button click to dictionary collecting each click event."""
-        if str(button) not in self.__keys_counter.keys():
-            self.__keys_counter[str(button)] = 1
+        if str(click) not in self.__keys_counter.keys():
+            self.__keys_counter[str(click)] = 1
         else:
-            self.__keys_counter[str(button)] += 1
+            self.__keys_counter[str(click)] += 1
 
     def __delete_chars(self):
         """A method which is called whenever user presses 'delete' key to delete chars from current writting sentence"""
@@ -126,31 +141,5 @@ class RealTimeKeyListener:
                 self.__sentence += char
             else:
                 self.__sentence = self.__sentence[:self.__position] + char + self.__sentence[self.__position:]
-
-
-# def add_dict_list_to_json_file(path_to_file, key, obj):
-#     # check if is empty
-#     if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
-#         data = s_f_extractor.read_json_file(path_to_file)
-#         open(path_to_file, 'w').close()
-#         file = open(path_to_file, 'a+')
-#         if isinstance(obj, dict) and obj.keys() and key in data.keys():
-#             for k in obj.keys():
-#                 if k not in data[key].keys():
-#                     data[key][k] = obj[k]
-#                 elif k in data[key].keys() and (isinstance(data[key][k], int) or isinstance(data[key][k], float)):
-#                     data[key][k] += obj[k]
-#
-#         elif key in data.keys() and isinstance(obj, list) and obj and isinstance(data[key], list):
-#             data[key].extend(obj)
-#         else:
-#             data[key] = obj
-#             file.seek(0)
-#         json.dump(data, file, indent=4)
-#         file.close()
-
-
-
-
 
 
