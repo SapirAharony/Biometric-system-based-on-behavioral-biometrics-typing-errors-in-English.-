@@ -40,7 +40,9 @@ class RealTimeKeyListener:
 
     def __on_click(self, x, y, button, pressed):
         self.__count_clicks(button)
+        print('self.__left_button_mouse_is_pressed: ', self.__left_button_mouse_is_pressed)
         if pressed and button == mouse.Button.left:
+            print('self.__left_button_mouse_is_pressed: ', self.__left_button_mouse_is_pressed)
             self.__left_button_mouse_is_pressed = True
 
     def __on_press(self, key):
@@ -48,8 +50,13 @@ class RealTimeKeyListener:
          whenever definded trigger happens."""
         print("\n\n\nSentence: ", self.__sentence)
         print('position: ', self.__position)
-        self. is_finished(key)
-        if key == keyboard.Key.delete and self.__sentence and self.__position != 0:
+        if self.__previous_key in Combinations.END_KEYS and key in Combinations.END_KEYS:
+            self. is_finished(key)
+
+        elif key in Combinations.SENTENCE_END_KEYS or key in Combinations.NEW_CONTEXT_KEYS or self.__left_button_mouse_is_pressed and self.__sentence:
+            self.__on_finished_context()
+
+        elif key == keyboard.Key.delete and self.__sentence and self.__position != 0:
             self.__delete_chars()
 
         elif key == keyboard.Key.backspace and self.__sentence:
@@ -66,18 +73,23 @@ class RealTimeKeyListener:
             self.__insert_key(key)
 
         self.__previous_key = key
+        self.__left_button_mouse_is_pressed = False
 
-    def __on_finished_context(self, key):
+    def __on_finished_context(self):
         """ Method that checks add list of words to file whenever the NEW_CONTEXT_KEYS or  combination is entered."""
-        pass
+        if self.__position == 0 and not self.__left_button_mouse_is_pressed:
+            self.__sentence = ''
+        else:
+
+            pass
 
     def is_finished(self, key):
         """A method that checks if the END KEY COMBINATION is clicked by user """
-        if self.__previous_key in Combinations.END_KEYS and key in Combinations.END_KEYS:
-            self.mouse_listener.stop()
-            self.keyboard_listener.stop()
-            print("Finished")
+        # if self.__sentence:
 
+        print("Finished")
+        self.mouse_listener.stop()
+        self.keyboard_listener.stop()
 
     def __count_clicks(self, button):
         """A method that adds each mouse button click to dictionary collecting each click event."""
@@ -136,4 +148,9 @@ class RealTimeKeyListener:
 #             file.seek(0)
 #         json.dump(data, file, indent=4)
 #         file.close()
+
+
+
+
+
 

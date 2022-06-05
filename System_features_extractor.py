@@ -2,7 +2,7 @@
 from spellchecker import SpellChecker
 from textblob import TextBlob
 import json
-import os
+# import os
 import nltk
 import Levenshtein
 
@@ -96,7 +96,7 @@ def read_json_file(path_to_file):
 
 
 class FeatureExtractor:
-    """ A class that  contains correcotrs, pos_tags"""
+    """ A class that  contains correctors, pos_tags"""
     spell_checker = SpellChecker()
 
     def correct_spelling_spell_checker(self, word):
@@ -124,6 +124,9 @@ class FeatureExtractor:
 
     def lemmatized_word(self, word):
         return nltk.stem.WordNetLemmatizer().lemmatize(word, self.__get_pos_for_word(word))
+
+    # def set_update_pos_tags(self, word):
+    #     return nltk.pos_tag(word)
 
 
 class Word:
@@ -159,11 +162,8 @@ class ListOfWords:
     def __init__(self, sentence):
         self.sentence = sentence
         for word in self.sentence.split():
-            word.apped(Word(word))
+            self.words.append(Word(word))
         self.__add_by_left_click = False
-
-    def set_update_pos_tags(self):
-        self.pos_tags = nltk.pos_tag(self.words)
 
     def __str__(self):
         return 'words: ' + " ".join(self.words) + '\nAdd by left click: ' + str(
@@ -182,21 +182,21 @@ class ListOfWords:
         self.__add_by_left_click = False
         self.words.clear()
 
-    def write_list_of_words_to_json_file(self, path_to_file, key, dictionary):
-        self.set_update_pos_tags()
-        if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
-            # open file
-            data = read_json_file(path_to_file)
-            print('data', data, type(data))
-            # clear file
-            open(path_to_file, 'w').close()
-            # add data
-            file = open(path_to_file, 'a+')
-            data[key].append(dictionary)
-            file.seek(0)
-            json.dump(data, file, indent=4)
-        else:
-            file = open(path_to_file, 'w+')
-            tmp = {key: [dictionary]}
-            json.dump(tmp, file, indent=4)
-        file.close()
+    # def write_list_of_words_to_json_file(self, path_to_file, key, dictionary):
+    #     self.set_update_pos_tags()
+    #     if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
+    #         # open file
+    #         data = read_json_file(path_to_file)
+    #         print('data', data, type(data))
+    #         # clear file
+    #         open(path_to_file, 'w').close()
+    #         # add data
+    #         file = open(path_to_file, 'a+')
+    #         data[key].append(dictionary)
+    #         file.seek(0)
+    #         json.dump(data, file, indent=4)
+    #     else:
+    #         file = open(path_to_file, 'w+')
+    #         tmp = {key: [dictionary]}
+    #         json.dump(tmp, file, indent=4)
+    #     file.close()
