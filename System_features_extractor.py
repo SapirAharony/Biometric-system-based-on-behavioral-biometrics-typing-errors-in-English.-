@@ -6,6 +6,7 @@ from textblob import TextBlob
 import json
 # import os
 import nltk
+from nltk import collections
 import Levenshtein
 
 
@@ -193,8 +194,8 @@ class ListOfWords:
     __add_by_left_click = False
     __original_sentence = ''
     words = []
-    pos_tags = []
     is_from_file = False
+    pos_tags_counter = None
     feature_extractor = FeatureExtractor
 
     def __init__(self, sentence, add_by_left_click=False):
@@ -204,6 +205,7 @@ class ListOfWords:
             self.words.append(Word(word))
             self.words[len(self.words) - 1].set_pos_tag(nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1])
             i += 1
+        self.pos_tags_counter = collections.Counter(tag for word,  tag in (nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))))
         self.__add_by_left_click = add_by_left_click
 
     def __repr__(self):
@@ -214,7 +216,7 @@ class ListOfWords:
         for word in self.words:
             print(word)
         return '\nAdd by left click: ' + str(
-            self.__add_by_left_click) + '\nIs from file: ' + str(self.is_from_file)
+            self.__add_by_left_click) + '\nIs from file: ' + str(self.is_from_file) + '\nPOS Tags counter' + str(self.pos_tags_counter)
 
     def set_left_click(self, value):
         if value:

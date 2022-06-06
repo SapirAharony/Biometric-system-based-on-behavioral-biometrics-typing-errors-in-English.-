@@ -15,11 +15,11 @@ text ="learn php from guru99 and make study easy".split()
 
 print("After Split:",text)
 tags = nltk.pos_tag(text)
-print(tags)
+print('tags', tags)
 for tag in tags:
     print(tag[1])
 couns = collections.Counter(tag for word,  tag in tags)
-print(couns['JJ'])
+print(couns)
 print(couns.keys(), couns.values())
 tags = nltk.pos_tag(['learn'])
 print(tags)
