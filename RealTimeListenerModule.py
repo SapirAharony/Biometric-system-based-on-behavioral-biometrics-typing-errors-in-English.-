@@ -42,14 +42,13 @@ class RealTimeKeyListener:
         self.__count_clicks(button)
         print('self.__left_button_mouse_is_pressed: ', self.__left_button_mouse_is_pressed)
         if pressed and button == mouse.Button.left:
-            print('self.__left_button_mouse_is_pressed: ', self.__left_button_mouse_is_pressed)
             self.__left_button_mouse_is_pressed = True
 
     def __on_press(self, key):
         """A method which is called whenever user presses a key. It checks type of typing key and call other functions,
          whenever definded trigger happens."""
-        # print("\n\n\nSentence: ", self.__sentence)
-        # print('position: ', self.__position)
+        print("\n\n\nSentence: ", self.__sentence)
+        print('position: ', self.__position)
         self.__count_clicks(key)
         if self.__previous_key in Combinations.END_KEYS and key in Combinations.END_KEYS:
             self.__is_finished()

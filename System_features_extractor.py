@@ -133,17 +133,33 @@ class Word:
     __distances_txt_blb = None
     __distances_spell_chck = None
     __was_edit = False
-    _pos_tag = ''
+    __pos_tag = ''
     featureextr = FeatureExtractor()
 
     def __init__(self, word):
         self.__word = word
 
     def __str__(self):
-        return self.__word + " " + self.__lemmatized_word + " " + self.__corrected_word_txt_blb + " " + self.__distances_txt_blb
+        tmp = ''
+        if self.__lemmatized_word is not None:
+            tmp += "\nLemmatized word: " + self.__lemmatized_word + ' '
+        if self.__corrected_word_txt_blb:
+            tmp += "\nCorrected word by TextBlob: " + self.__corrected_word_txt_blb + ', distance = ' + self.__distances_txt_blb
+        if self.__distances_txt_blb:
+            tmp += "\nCorrected word by TextBlob: " + self.__corrected_candidates_spell_chck + ' ' + ', distance = ' + self.__distances_spell_chck
+        if tmp:
+            return 'Word: ' + self.__word + "\npos tag: " + self.__pos_tag + tmp
+        else:
+            return 'Word: ' + self.__word + "\npos tag: " + self.__pos_tag
+
+    def __repr__(self):
+        return str(self)
 
     def get_word(self, word):
         return word
+
+    def set_pos_tag (self, pos_tag):
+        self.__pos_tag = pos_tag
 
 
 def write_list_of_words_to_json_file(path_to_file, key, dictionary):
@@ -164,6 +180,7 @@ def write_list_of_words_to_json_file(path_to_file, key, dictionary):
         json.dump(tmp, file, indent=4)
     file.close()
 
+
 def read_json_file(path_to_file):
     with open(path_to_file, 'r') as f:
         data = json.load(f)
@@ -172,9 +189,7 @@ def read_json_file(path_to_file):
 
 class ListOfWords:
     """ A class which includes words, which are separated by NEXT_WORD_COMBINATION"""
-    sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[\s,:/\".;!?\n()[]{}\]', gaps=True)
-    # __word_tokenizer = nltk.tokenize.RegexpTokenizer('[\s,:/\".;!?\n{}\[\]()-+=_~`@#$%^&*]', gaps=True)
-
+    sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[\W_]', gaps=True)
     __add_by_left_click = False
     __original_sentence = ''
     words = []
@@ -182,14 +197,23 @@ class ListOfWords:
     is_from_file = False
     feature_extractor = FeatureExtractor
 
-    def __init__(self, sentence):
+    def __init__(self, sentence, add_by_left_click=False):
         self.__original_sentence = sentence
-        for word in self.sentence_tokenizer.tokenize(self.__original_sentence):
+        i = 0
+        for word in self.sentence_tokenizer.tokenize(sentence):
             self.words.append(Word(word))
-        self.__add_by_left_click = False
+            self.words[len(self.words) - 1].set_pos_tag(nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1])
+            i += 1
+        self.__add_by_left_click = add_by_left_click
+
+    def __repr__(self):
+        return str(self)
 
     def __str__(self):
-        return 'words: ' + " ".join(self.words) + '\nAdd by left click: ' + str(
+        print("Words: ")
+        for word in self.words:
+            print(word)
+        return '\nAdd by left click: ' + str(
             self.__add_by_left_click) + '\nIs from file: ' + str(self.is_from_file)
 
     def set_left_click(self, value):
@@ -204,5 +228,3 @@ class ListOfWords:
     def clear_list(self):
         self.__add_by_left_click = False
         self.words.clear()
-
-
