@@ -196,7 +196,8 @@ class ListOfWords:
 
     def __init__(self, sentence, add_by_left_click=False):
         self.__original_sentence = sentence
-        corrected_by_txt_blb = self.sentence_tokenizer.tokenize(correct_spelling_txt_blb(self.__original_sentence))
+
+        corrected_by_txt_blb = self.sentence_tokenizer.tokenize(correct_spelling_txt_blb(self.__original_sentence).stripped)
         i = 0
         for word in self.sentence_tokenizer.tokenize(sentence):
             self.words.append(Word(word))
