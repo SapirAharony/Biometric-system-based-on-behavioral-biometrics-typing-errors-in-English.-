@@ -27,8 +27,8 @@ class Distances:
         self.__set_operations()
         self.damerau_levenshtein_distance = len(self.get_string_oprations(str_1, str_2))
 
-    def __set_operations(self, is_damerau=True):
-        for k in self.get_string_oprations(self.__word_1, self.__word_2, is_damerau):
+    def __set_operations(self, word_1, word_2, is_damerau=True):
+        for k in self.get_string_oprations(word_1, word_2, is_damerau):
             self.type_of_lev_operations[k[0]] += 1
 
     def get_string_oprations(self, string_1, string_2, is_damerau=True):
@@ -82,84 +82,80 @@ class Distances:
         return distance_matrix
 
 
-def get_freq_word(list_of_words, freq_dict):
-    if isinstance(list_of_words, ListOfWords) and isinstance(freq_dict, dict):
-        for word in list_of_words.words:
-            if word not in freq_dict.keys():
-                freq_dict[word] = 1
-            else:
-                freq_dict[word] += 1
-    return freq_dict
+def set_update_pos_tags(word):
+    return nltk.pos_tag(word)
 
 
-class FeatureExtractor:
-    """ A class that  contains correctors, pos_tags"""
-    spell_checker = SpellChecker()
+def correct_spelling_spell_checker(word_or_list_of_words):
+    """ A function which returns corrected spelling (by SpellChecker)"""
+    if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words:
+        return SpellChecker().correction(word_or_list_of_words)
+    elif isinstance(word_or_list_of_words, list):
+        return [SpellChecker().correction(word) for word in word_or_list_of_words]
 
-    def correct_spelling_spell_checker(self, word):
-        """ A function which returns corrected spelling (by SpellChecker)"""
-        correct_word = self.spell_checker.correction(word)
-        return correct_word
 
-    def candidates_to_correct_spelling_spell_checker(self, word):
-        """ A class which returns canditates spelling (by SpellChecker)"""
-        return self.spell_checker.candidates(word)
+def candidates_to_correct_spelling_spell_checker(word_or_list_of_words):
+    """ A class which returns canditates spelling (by SpellChecker)"""
+    if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words:
+        return SpellChecker().correction(word_or_list_of_words)
+    elif isinstance(word_or_list_of_words, list):
+        return [SpellChecker().correction(word) for word in word_or_list_of_words]
 
-    def correct_spelling_txt_blb(self, sentence):
-        """ A function which returns corrected spelling (by TextBlob)"""
-        # Making our first textblob
-        return TextBlob(sentence).correct()  # Correcting the text
 
-    def __get_pos_for_word(self, word):
-        """ Method that returns a POS tag for lemmatization """
-        tag = nltk.pos_tag([word])[0][1][0].upper()
-        tag_dict = {"J": nltk.corpus.wordnet.ADJ,
-                    "N": nltk.corpus.wordnet.NOUN,
-                    "V": nltk.corpus.wordnet.VERB,
-                    "R": nltk.corpus.wordnet.ADV}
-        return tag_dict.get(tag, nltk.corpus.wordnet.NOUN)
+def correct_spelling_txt_blb(sentence) -> str:
+    """ A function which returns corrected spelling (by TextBlob)"""
+    # Making our first textblob
+    return TextBlob(sentence).correct()  # Correcting the text
 
-    def lemmatized_word(self, word):
-        return nltk.stem.WordNetLemmatizer().lemmatize(word, self.__get_pos_for_word(word))
 
-    # def set_update_pos_tags(self, word):
-    #     return nltk.pos_tag(word)
+def get_pos_for_word(word: str) -> str:
+    """ Method that returns a POS tag for lemmatization """
+    tag = nltk.pos_tag([word])[0][1][0].upper()
+    tag_dict = {"J": nltk.corpus.wordnet.ADJ,
+                "N": nltk.corpus.wordnet.NOUN,
+                "V": nltk.corpus.wordnet.VERB,
+                "R": nltk.corpus.wordnet.ADV}
+    return tag_dict.get(tag, nltk.corpus.wordnet.NOUN)
+
+
+def lemmatize_word(word: str) -> str:
+    return nltk.stem.WordNetLemmatizer().lemmatize(word, get_pos_for_word(word))
 
 
 class Word:
-    __word = ''
-    __lemmatized_word = ''
-    __corrected_word_txt_blb = ''
-    __corrected_candidates_spell_chck = ''
-    __distances_txt_blb = None
-    __distances_spell_chck = None
-    __was_edit = False
-    __pos_tag = ''
-    featureextr = FeatureExtractor()
+    word = ''
+    lemmatized_word = ''
+    corrected_word_txt_blb = ''
+    corrected_candidates_spell_chck = ''
+    distances_txt_blb = None
+    distances_spell_chck = None
+    pos_tag = ''
+
 
     def __init__(self, word):
         self.__word = word
+        self.__lemmatized_word = lemmatize_word(word)
 
     def __str__(self):
         tmp = ''
         if self.__lemmatized_word is not None:
-            tmp += "\nLemmatized word: " + self.__lemmatized_word + ' '
-        if self.__corrected_word_txt_blb:
-            tmp += "\nCorrected word by TextBlob: " + self.__corrected_word_txt_blb + ', distance = ' + self.__distances_txt_blb
-        if self.__distances_txt_blb:
-            tmp += "\nCorrected word by TextBlob: " + self.__corrected_candidates_spell_chck + ' ' + ', distance = ' + self.__distances_spell_chck
+            tmp += "\n\tLemmatized word: " + self.__lemmatized_word + ' '
+        if self.corrected_word_txt_blb:
+            tmp += "\n\tCorrected word by TextBlob: " + self.corrected_word_txt_blb + ', distance = ' + self.distances_txt_blb
+        if self.distances_txt_blb:
+            tmp += "\n\tCorrected word by TextBlob: " + self.corrected_candidates_spell_chck + ' ' + ', distance = ' + self.distances_spell_chck
         if tmp:
-            return 'Word: ' + self.__word + "\npos tag: " + self.__pos_tag + tmp
+            return 'Word: ' + self.__word + "\n\tpos tag: " + self.__pos_tag + tmp
         else:
-            return 'Word: ' + self.__word + "\npos tag: " + self.__pos_tag
+            return 'Word: ' + self.__word + "\n\tpos tag: " + self.__pos_tag
 
     def __repr__(self):
         return str(self)
 
-    def get_word(self, word):
-        return word
+    def get_word(self):
+        return self.__word
 
-    def set_pos_tag (self, pos_tag):
+    def set_pos_tag(self, pos_tag):
         self.__pos_tag = pos_tag
 
 
@@ -196,16 +192,24 @@ class ListOfWords:
     words = []
     is_from_file = False
     pos_tags_counter = None
-    feature_extractor = FeatureExtractor
+
 
     def __init__(self, sentence, add_by_left_click=False):
         self.__original_sentence = sentence
+        corrected_by_txt_blb = self.sentence_tokenizer.tokenize(correct_spelling_txt_blb(self.__original_sentence))
         i = 0
         for word in self.sentence_tokenizer.tokenize(sentence):
             self.words.append(Word(word))
-            self.words[len(self.words) - 1].set_pos_tag(nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1])
+            self.words[len(self.words) - 1].set_pos_tag(
+                nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1])
+            if correct_spelling_spell_checker(word) != word:
+                self.words[
+                    len(self.words) - 1].corrected_candidates_spell_chck = correct_spelling_spell_checker(word)
+            if corrected_by_txt_blb[i] != word:
+                corrected_by_txt_blb = corrected_by_txt_blb[i]
             i += 1
-        self.pos_tags_counter = collections.Counter(tag for word,  tag in (nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))))
+        self.pos_tags_counter = collections.Counter(
+            tag for word, tag in (nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))))
         self.__add_by_left_click = add_by_left_click
 
     def __repr__(self):
@@ -214,15 +218,13 @@ class ListOfWords:
     def __str__(self):
         print("Words: ")
         for word in self.words:
-            print(word)
-        return '\nAdd by left click: ' + str(
-            self.__add_by_left_click) + '\nIs from file: ' + str(self.is_from_file) + '\nPOS Tags counter' + str(self.pos_tags_counter)
+            print("-", word)
+        return '\n- Add by left click: ' + str(
+            self.__add_by_left_click) + '\n- Is from file: ' + str(self.is_from_file) + '\n- POS Tags counter' + str(
+            self.pos_tags_counter)
 
-    def set_left_click(self, value):
-        if value:
-            self.__add_by_left_click = True
-        elif not value:
-            self.__add_by_left_click = False
+    def set_left_click(self):
+        self.__add_by_left_click = True
 
     def get_click(self):
         return self.__add_by_left_click
@@ -230,3 +232,13 @@ class ListOfWords:
     def clear_list(self):
         self.__add_by_left_click = False
         self.words.clear()
+
+
+def get_freq_word(list_of_words: ListOfWords, freq_dict: dict):
+    if isinstance(list_of_words, ListOfWords) and isinstance(freq_dict, dict):
+        for word_istance in list_of_words.words:
+            if word_istance.word not in freq_dict.keys():
+                freq_dict[word_istance.word] = 1
+            else:
+                freq_dict[word_istance.word] += 1
+    return freq_dict
