@@ -24,8 +24,13 @@ class Distances:
         self.__word_1 = str_1
         self.__word_2 = str_2
         self.levenshtein_distance = Levenshtein.distance(str_1, str_2)
-        self.__set_operations()
+        self.__set_operations(str_1, str_2)
         self.damerau_levenshtein_distance = len(self.get_string_oprations(str_1, str_2))
+
+    def __str__(self):
+        return '1. ' + self.__word_1 + '\t2. ' + self.__word_2 + '\n\t-D-L distance: ' + str(
+            self.damerau_levenshtein_distance) + '\n\t-L distance: ' + str(
+            self.levenshtein_distance) + "\n\t-Operations:" + str(self.type_of_lev_operations)
 
     def __set_operations(self, word_1, word_2, is_damerau=True):
         for k in self.get_string_oprations(word_1, word_2, is_damerau):
@@ -82,10 +87,6 @@ class Distances:
         return distance_matrix
 
 
-def set_update_pos_tags(word):
-    return nltk.pos_tag(word)
-
-
 def correct_spelling_spell_checker(word_or_list_of_words):
     """ A function which returns corrected spelling (by SpellChecker)"""
     if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words:
@@ -131,7 +132,6 @@ class Word:
     distances_spell_chck = None
     pos_tag = ''
 
-
     def __init__(self, word):
         self.__word = word
         self.__lemmatized_word = lemmatize_word(word)
@@ -140,23 +140,20 @@ class Word:
         tmp = ''
         if self.__lemmatized_word is not None:
             tmp += "\n\tLemmatized word: " + self.__lemmatized_word + ' '
+        if self.corrected_candidates_spell_chck:
+            tmp += "\n\tCorrected word by SpellChecker: " + self.corrected_candidates_spell_chck  # ', distance = ' + self.distances_spell_chck
         if self.corrected_word_txt_blb:
-            tmp += "\n\tCorrected word by TextBlob: " + self.corrected_word_txt_blb + ', distance = ' + self.distances_txt_blb
-        if self.distances_txt_blb:
-            tmp += "\n\tCorrected word by TextBlob: " + self.corrected_candidates_spell_chck + ' ' + ', distance = ' + self.distances_spell_chck
+            tmp += "\n\tCorrected word by TextBlob: " + self.corrected_word_txt_blb  # + ', distance = ' + self.distances_txt_blb
         if tmp:
-            return 'Word: ' + self.__word + "\n\tpos tag: " + self.__pos_tag + tmp
+            return 'Word: ' + self.__word + "\n\tpos tag: " + self.pos_tag + tmp
         else:
-            return 'Word: ' + self.__word + "\n\tpos tag: " + self.__pos_tag
+            return 'Word: ' + self.__word + "\n\tpos tag: " + self.pos_tag
 
     def __repr__(self):
         return str(self)
 
     def get_word(self):
         return self.__word
-
-    def set_pos_tag(self, pos_tag):
-        self.__pos_tag = pos_tag
 
 
 def write_list_of_words_to_json_file(path_to_file, key, dictionary):
@@ -193,21 +190,21 @@ class ListOfWords:
     is_from_file = False
     pos_tags_counter = None
 
-
     def __init__(self, sentence, add_by_left_click=False):
         self.__original_sentence = sentence
-
-        corrected_by_txt_blb = self.sentence_tokenizer.tokenize(correct_spelling_txt_blb(self.__original_sentence).stripped)
+        corrected_by_txt_blb = self.sentence_tokenizer.tokenize(
+            correct_spelling_txt_blb(self.__original_sentence).stripped)
         i = 0
         for word in self.sentence_tokenizer.tokenize(sentence):
             self.words.append(Word(word))
-            self.words[len(self.words) - 1].set_pos_tag(
-                nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1])
+            self.words[len(self.words) - 1].pos_tag = \
+            nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1]
             if correct_spelling_spell_checker(word) != word:
-                self.words[
-                    len(self.words) - 1].corrected_candidates_spell_chck = correct_spelling_spell_checker(word)
+                self.words[i].corrected_candidates_spell_chck = correct_spelling_spell_checker(word)
+                self.words[i].distances_txt_blb = Distances(correct_spelling_spell_checker(word), word)
             if corrected_by_txt_blb[i] != word:
-                corrected_by_txt_blb = corrected_by_txt_blb[i]
+                self.words[i].corrected_word_txt_blb = corrected_by_txt_blb[i]
+                self.words[i].distances_txt_blb = Distances(corrected_by_txt_blb[i], word)
             i += 1
         self.pos_tags_counter = collections.Counter(
             tag for word, tag in (nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))))
