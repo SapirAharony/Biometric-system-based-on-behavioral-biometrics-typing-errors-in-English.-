@@ -133,27 +133,24 @@ class Word:
     pos_tag = ''
 
     def __init__(self, word):
-        self.__word = word
-        self.__lemmatized_word = lemmatize_word(word)
+        self.word = word
+        self.lemmatized_word = lemmatize_word(word)
 
     def __str__(self):
         tmp = ''
-        if self.__lemmatized_word is not None:
-            tmp += "\n\tLemmatized word: " + self.__lemmatized_word + ' '
+        if self.lemmatized_word is not None:
+            tmp += "\n\tLemmatized word: " + self.lemmatized_word + ' '
         if self.corrected_candidates_spell_chck:
-            tmp += "\n\tCorrected word by SpellChecker: " + self.corrected_candidates_spell_chck  # ', distance = ' + self.distances_spell_chck
+            tmp += "\n\tCorrected word by SpellChecker: " + self.corrected_candidates_spell_chck  + ',\n\t-distance: ' + str(self.distances_spell_chck)
         if self.corrected_word_txt_blb:
-            tmp += "\n\tCorrected word by TextBlob: " + self.corrected_word_txt_blb  # + ', distance = ' + self.distances_txt_blb
+            tmp += "\n\tCorrected word by TextBlob: " + self.corrected_word_txt_blb  + ',\n\t-distance: ' + str(self.distances_txt_blb)
         if tmp:
-            return 'Word: ' + self.__word + "\n\tpos tag: " + self.pos_tag + tmp
+            return 'Word: ' + self.word + "\n\tpos tag: " + self.pos_tag + tmp
         else:
-            return 'Word: ' + self.__word + "\n\tpos tag: " + self.pos_tag
+            return 'Word: ' + self.word + "\n\tpos tag: " + self.pos_tag
 
     def __repr__(self):
         return str(self)
-
-    def get_word(self):
-        return self.__word
 
 
 def write_list_of_words_to_json_file(path_to_file, key, dictionary):
@@ -201,7 +198,7 @@ class ListOfWords:
             nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1]
             if correct_spelling_spell_checker(word) != word:
                 self.words[i].corrected_candidates_spell_chck = correct_spelling_spell_checker(word)
-                self.words[i].distances_txt_blb = Distances(correct_spelling_spell_checker(word), word)
+                self.words[i].distances_spell_chck = Distances(correct_spelling_spell_checker(word), word)
             if corrected_by_txt_blb[i] != word:
                 self.words[i].corrected_word_txt_blb = corrected_by_txt_blb[i]
                 self.words[i].distances_txt_blb = Distances(corrected_by_txt_blb[i], word)
