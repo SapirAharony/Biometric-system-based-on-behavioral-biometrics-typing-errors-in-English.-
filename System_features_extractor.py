@@ -127,7 +127,7 @@ class Word:
     original_word = ''
     lemmatized_word = ''
     corrected_word_txt_blb = ''
-    corrected_candidates_spell_chck = ''
+    corrected_word_spell_chck = ''
     distances_txt_blb = None
     distances_spell_chck = None
     pos_tag = ''
@@ -140,8 +140,8 @@ class Word:
         tmp = ''
         if self.lemmatized_word is not None:
             tmp += "\n\tLemmatized word: " + self.lemmatized_word + ' '
-        if self.corrected_candidates_spell_chck:
-            tmp += "\n\tCorrected word by SpellChecker: " + self.corrected_candidates_spell_chck + ',\n\t-distance: ' + str(
+        if self.corrected_word_spell_chck:
+            tmp += "\n\tCorrected word by SpellChecker: " + self.corrected_word_spell_chck + ',\n\t-distance: ' + str(
                 self.distances_spell_chck)
         if self.corrected_word_txt_blb:
             tmp += "\n\tCorrected word by TextBlob: " + self.corrected_word_txt_blb + ',\n\t-distance: ' + str(
@@ -156,7 +156,7 @@ class ListOfWords:
     """ A class which includes words, which are separated by NEXT_WORD_COMBINATION"""
     sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[\W_]', gaps=True)
     __add_by_left_click = False
-    __original_sentence = ''
+    __original_sentence = None
     __is_from_file = None
     words = None
     pos_tags_counter = None
@@ -164,15 +164,16 @@ class ListOfWords:
     def __init__(self, sentence, add_by_left_click=False, is_from_file = False, ):
         self.words = []
         self.__original_sentence = sentence
-        corrected_by_txt_blb = self.sentence_tokenizer.tokenize(
-            correct_spelling_txt_blb(self.__original_sentence).stripped)
+        corrected_by_txt_blb = correct_spelling_txt_blb(" ".join(self.sentence_tokenizer.tokenize(sentence))).split()
         i = 0
+        print(self.sentence_tokenizer.tokenize(sentence), len(self.sentence_tokenizer.tokenize(sentence)))
+        print(corrected_by_txt_blb, len(corrected_by_txt_blb))
         for word in self.sentence_tokenizer.tokenize(sentence):
             self.words.append(Word(word))
             self.words[len(self.words) - 1].pos_tag = \
                 nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1]
             if correct_spelling_spell_checker(word) != word:
-                self.words[i].corrected_candidates_spell_chck = correct_spelling_spell_checker(word)
+                self.words[i].corrected_word_spell_chck = correct_spelling_spell_checker(word)
                 self.words[i].distances_spell_chck = Distances(correct_spelling_spell_checker(word), word)
             if corrected_by_txt_blb[i] != word:
                 self.words[i].corrected_word_txt_blb = corrected_by_txt_blb[i]
@@ -200,6 +201,10 @@ class ListOfWords:
     def clear_list(self):
         self.__add_by_left_click = False
         self.words.clear()
+        self.__original_sentence = None
+        self.__is_from_file = None
+        self.pos_tags_counter = None
+
 
 
 def get_freq_word(list_of_words: ListOfWords, freq_dict: dict):

@@ -47,13 +47,14 @@ class RealTimeKeyListener:
     def __on_press(self, key):
         """A method which is called whenever user presses a key. It checks type of typing key and call other functions,
          whenever definded trigger happens."""
-        print("\n\n\nSentence: ", self.__sentence)
+        print("\nSentence: ", self.__sentence)
         print('position: ', self.__position)
+        print('sentence: ', self.__list_of_words)
         self.__count_clicks(key)
         if self.__previous_key in Combinations.END_KEYS and key in Combinations.END_KEYS:
             self.__is_finished()
 
-        elif key in Combinations.SENTENCE_END_KEYS or key in Combinations.NEW_CONTEXT_KEYS or self.__left_button_mouse_is_pressed and self.__sentence:
+        elif (key in Combinations.SENTENCE_END_KEYS or key in Combinations.NEW_CONTEXT_KEYS or self.__left_button_mouse_is_pressed or (hasattr(key, 'char') and key.char in Combinations.SENTENCE_END_KEYS)) and self.__sentence:
             self.__on_finished_context()
 
         elif key == keyboard.Key.delete and self.__sentence and self.__position != 0:
@@ -85,9 +86,7 @@ class RealTimeKeyListener:
             self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[:self.__position])
             if self.__left_button_mouse_is_pressed:
                 self.__list_of_words.set_left_click()
-                print(self.__list_of_words)
                 self.__list_of_words = None
-                print(self.__list_of_words)
 
             SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence', SFExtractor.object_to_dicts(self.__list_of_words))
             if self.__left_button_mouse_is_pressed or at_the_end:
