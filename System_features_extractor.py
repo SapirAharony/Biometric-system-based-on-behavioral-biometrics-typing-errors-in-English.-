@@ -141,9 +141,11 @@ class Word:
         if self.lemmatized_word is not None:
             tmp += "\n\tLemmatized word: " + self.lemmatized_word + ' '
         if self.corrected_candidates_spell_chck:
-            tmp += "\n\tCorrected word by SpellChecker: " + self.corrected_candidates_spell_chck  + ',\n\t-distance: ' + str(self.distances_spell_chck)
+            tmp += "\n\tCorrected word by SpellChecker: " + self.corrected_candidates_spell_chck + ',\n\t-distance: ' + str(
+                self.distances_spell_chck)
         if self.corrected_word_txt_blb:
-            tmp += "\n\tCorrected word by TextBlob: " + self.corrected_word_txt_blb  + ',\n\t-distance: ' + str(self.distances_txt_blb)
+            tmp += "\n\tCorrected word by TextBlob: " + self.corrected_word_txt_blb + ',\n\t-distance: ' + str(
+                self.distances_txt_blb)
         if tmp:
             return 'Word: ' + self.word + "\n\tpos tag: " + self.pos_tag + tmp
         else:
@@ -195,7 +197,7 @@ class ListOfWords:
         for word in self.sentence_tokenizer.tokenize(sentence):
             self.words.append(Word(word))
             self.words[len(self.words) - 1].pos_tag = \
-            nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1]
+                nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1]
             if correct_spelling_spell_checker(word) != word:
                 self.words[i].corrected_candidates_spell_chck = correct_spelling_spell_checker(word)
                 self.words[i].distances_spell_chck = Distances(correct_spelling_spell_checker(word), word)
