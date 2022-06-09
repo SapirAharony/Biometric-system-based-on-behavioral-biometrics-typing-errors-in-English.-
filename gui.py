@@ -38,6 +38,7 @@ def on_stop():
     else:
         tkinter.messagebox.showwarning(title=title, message="Listener IS NOT running!")
 
+
 def set_path():
     global listener, folder_selected
     folder_selected = filedialog.askdirectory()
@@ -55,14 +56,19 @@ if __name__ == '__main__':
     myFont = font.Font(weight="bold", family='Courier', size=12)
 
     # start_button
-    start_button = tk.Button(root, command=on_start, text="Start Listener", bg="#7E85F8", width=20, height=1)
+    start_button = tk.Button(root, command=on_start, text="Start Online Listener", bg="#7E85F8", width=20, height=1)
     start_button['font'] = myFont
     start_button.pack(ipadx=5, ipady=5, expand=True)
 
     # stop_button
-    stop_button = tk.Button(root, command=on_stop, text="Stop Listener", bg="#7E85F8", width=20, height=1)
+    stop_button = tk.Button(root, command=on_stop, text="Stop Online Listener", bg="#7E85F8", width=20, height=1)
     stop_button.pack(ipadx=5, ipady=5, expand=True)
     stop_button['font'] = myFont
+
+    offline_btn = tk.Button(root, command=on_stop, text="Offline Listener", bg="#7E85F8", width=20, height=1)
+    offline_btn.pack(ipadx=5, ipady=5, expand=True)
+    offline_btn['font'] = myFont
+
 
     set_path_button = tk.Button(root, command=set_path, text="Set path for end files", bg="#FF8767", width=20, height=1)
     set_path_button.pack(ipadx=5, ipady=5, expand=True)

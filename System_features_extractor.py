@@ -20,9 +20,9 @@ class Distances:
         self.__word_1 = str_1
         self.__word_2 = str_2
         self.type_of_lev_operations = {"insert": 0,
-                              "replace": 0,
-                              "delete": 0,
-                              "transpose": 0}
+                                       "replace": 0,
+                                       "delete": 0,
+                                       "transpose": 0}
         self.levenshtein_distance = Levenshtein.distance(str_1, str_2)
         self.__set_operations(str_1, str_2)
         self.damerau_levenshtein_distance = len(self.get_string_oprations(str_1, str_2))
@@ -161,7 +161,7 @@ class ListOfWords:
     words = None
     pos_tags_counter = None
 
-    def __init__(self, sentence, add_by_left_click=False, is_from_file = False, ):
+    def __init__(self, sentence, add_by_left_click=False, is_from_file=False, ):
         self.words = []
         self.__original_sentence = sentence
         corrected_by_txt_blb = correct_spelling_txt_blb(" ".join(self.sentence_tokenizer.tokenize(sentence))).split()
@@ -204,7 +204,6 @@ class ListOfWords:
         self.__original_sentence = None
         self.__is_from_file = None
         self.pos_tags_counter = None
-
 
 
 def get_freq_word(list_of_words: ListOfWords, freq_dict: dict):

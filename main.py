@@ -1,6 +1,8 @@
 from RealTimeListenerModule import RealTimeKeyListener
-
-real_time_listener = RealTimeKeyListener()
+from OfflineListenerModule import OfflineListener
+offline_lstnr = OfflineListener()
+offline_lstnr.read_text_file('C:/Users/user/Desktop/tmp.txt')
+# real_time_listener = RealTimeKeyListener()
 from types import SimpleNamespace
 
 import System_features_extractor, textblob, os, json
@@ -23,7 +25,3 @@ corrected_by_txt_blb = correct_spelling_txt_blb(" ".join(
 
 # print("LIST_DICT: " , corrected_by_txt_blb)
 # print("WORD_DICT: " ,list_of_words.words[0].__dict__)
-
-# print(System_features_extractor.Distances('football', 'fotball'))
-# print(System_features_extractor.Distances('frotball', 'fotball'))
-# print(System_features_extractor.Distances('footbal', 'fotoball').__dict__)
