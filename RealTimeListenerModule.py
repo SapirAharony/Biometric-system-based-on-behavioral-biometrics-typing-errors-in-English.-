@@ -26,7 +26,7 @@ class RealTimeKeyListener:
     __sentence = ""
     __list_of_words = None
     __keys_counter = {}
-    __destination_json_file_path = "C:/Users/user/Desktop/destination_file.json"
+    destination_json_file_path = "C:/Users/user/Desktop/destination_file.json"
     keyboard_listener = None
     mouse_listener = None
 
@@ -79,7 +79,7 @@ class RealTimeKeyListener:
         """ Method that checks add list of words to file whenever the NEW_CONTEXT_KEYS or  combination is entered."""
         if self.__position == 0:
             self.__list_of_words = SFExtractor.ListOfWords(self.__sentence)
-            # self.__list_of_words.write_to_file(self.__destination_json_file_path)
+            SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence', SFExtractor.object_to_dicts(self.__list_of_words))
             self.__sentence = ''
         else:
             self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[:self.__position])
@@ -87,17 +87,16 @@ class RealTimeKeyListener:
                 self.__list_of_words.set_left_click()
                 print(self.__list_of_words)
                 self.__list_of_words = None
-                print("\n\n\nZeroized\n\n\n\n")
                 print(self.__list_of_words)
 
-            # self.__list_of_words.write_to_file(self.__destination_json_file_path)
+            SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence', SFExtractor.object_to_dicts(self.__list_of_words))
             if self.__left_button_mouse_is_pressed or at_the_end:
                 self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[self.__position:])
                 if self.__left_button_mouse_is_pressed:
                     self.__list_of_words.set_left_click()
-                print(self.__list_of_words)
+                SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
+                                                      SFExtractor.object_to_dicts(self.__list_of_words))
 
-                # self.__list_of_words.write_to_file(self.__destination_json_file_path)
                 self.__list_of_words = None
                 self.__sentence = ''
                 self.__position = 0
@@ -110,7 +109,6 @@ class RealTimeKeyListener:
         """A method that checks if the END KEY COMBINATION is clicked by user """
         if self.__sentence:
             self.__on_finished_context(at_the_end=True)
-        # zapisanie __keys_counter do pliku .json
 
         print("Finished")
         self.mouse_listener.stop()
@@ -125,7 +123,6 @@ class RealTimeKeyListener:
 
     def __delete_chars(self):
         """A method which is called whenever user presses 'delete' key to delete chars from current writting sentence"""
-        # or list of word if left mouse key wasn't pressed before """
         if self.__position < -1:
             self.__sentence = self.__sentence[:self.__position] + self.__sentence[self.__position + 1:]
         elif self.__position == -1:
@@ -134,7 +131,6 @@ class RealTimeKeyListener:
 
     def __backspace_chars(self):
         """A Method which is called whenever user presses 'backspace' key to delete chars from sentence """
-        # or list of word if left mouse key wasn't pressed before """
         if self.__position == 0:
             self.__sentence = self.__sentence[:-1]
         elif self.__position < 0:

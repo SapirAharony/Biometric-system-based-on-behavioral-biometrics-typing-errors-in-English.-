@@ -15,9 +15,9 @@ def on_start():
     else:
         listener = RealTimeKeyListener()
         if folder_selected is not None:
-            listener.set_path_json_destination_file(folder_selected)
+            listener.destination_json_file_path = folder_selected
         tkinter.messagebox.showwarning(title=title, message="Listener IS running! Your destination file is: " +
-                                                            str(listener.get_path_json_destination_file()))
+                                                            str(listener.destination_json_file_path))
 
 def press_end_combination():
     controler = keyboard.Controller()
@@ -42,7 +42,7 @@ def set_path():
     global listener, folder_selected
     folder_selected = filedialog.askdirectory()
     if isinstance(listener, RealTimeKeyListener):
-        listener.set_path_json_destination_file(folder_selected)
+        listener. destination_json_file_path = folder_selected
     print(folder_selected)
 
 

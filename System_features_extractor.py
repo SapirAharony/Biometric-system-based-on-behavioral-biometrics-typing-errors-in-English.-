@@ -4,7 +4,6 @@ import os
 from spellchecker import SpellChecker
 from textblob import TextBlob
 import json
-# import os
 import nltk
 from nltk import collections
 import Levenshtein
@@ -12,10 +11,7 @@ import Levenshtein
 
 class Distances:
     levenshtein_distance = 0
-    type_of_lev_operations = {"insert": 0,
-                              "replace": 0,
-                              "delete": 0,
-                              "transpose": 0}
+    type_of_lev_operations = None
     damerau_levenshtein_distance = 0
     __word_1 = None
     __word_2 = None
@@ -23,6 +19,10 @@ class Distances:
     def __init__(self, str_1, str_2):
         self.__word_1 = str_1
         self.__word_2 = str_2
+        self.type_of_lev_operations = {"insert": 0,
+                              "replace": 0,
+                              "delete": 0,
+                              "transpose": 0}
         self.levenshtein_distance = Levenshtein.distance(str_1, str_2)
         self.__set_operations(str_1, str_2)
         self.damerau_levenshtein_distance = len(self.get_string_oprations(str_1, str_2))
@@ -124,7 +124,7 @@ def lemmatize_word(word: str) -> str:
 
 
 class Word:
-    word = ''
+    original_word = ''
     lemmatized_word = ''
     corrected_word_txt_blb = ''
     corrected_candidates_spell_chck = ''
@@ -133,7 +133,7 @@ class Word:
     pos_tag = ''
 
     def __init__(self, word):
-        self.word = word
+        self.original_word = word
         self.lemmatized_word = lemmatize_word(word)
 
     def __str__(self):
@@ -147,37 +147,9 @@ class Word:
             tmp += "\n\tCorrected word by TextBlob: " + self.corrected_word_txt_blb + ',\n\t-distance: ' + str(
                 self.distances_txt_blb)
         if tmp:
-            return 'Word: ' + self.word + "\n\tpos tag: " + self.pos_tag + tmp
+            return 'Word: ' + self.original_word + "\n\tpos tag: " + self.pos_tag + tmp
         else:
-            return 'Word: ' + self.word + "\n\tpos tag: " + self.pos_tag
-
-    def __repr__(self):
-        return str(self)
-
-
-def write_list_of_words_to_json_file(path_to_file, key, dictionary):
-    if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
-        # open file
-        data = read_json_file(path_to_file)
-        print('data', data, type(data))
-        # clear file
-        open(path_to_file, 'w').close()
-        # add data
-        file = open(path_to_file, 'a+')
-        data[key].append(dictionary)
-        file.seek(0)
-        json.dump(data, file, indent=4)
-    else:
-        file = open(path_to_file, 'w+')
-        tmp = {key: [dictionary]}
-        json.dump(tmp, file, indent=4)
-    file.close()
-
-
-def read_json_file(path_to_file):
-    with open(path_to_file, 'r') as f:
-        data = json.load(f)
-    return data
+            return 'Word: ' + self.original_word + "\n\tpos tag: " + self.pos_tag
 
 
 class ListOfWords:
@@ -185,11 +157,12 @@ class ListOfWords:
     sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[\W_]', gaps=True)
     __add_by_left_click = False
     __original_sentence = ''
-    words = []
-    is_from_file = False
+    __is_from_file = None
+    words = None
     pos_tags_counter = None
 
-    def __init__(self, sentence, add_by_left_click=False):
+    def __init__(self, sentence, add_by_left_click=False, is_from_file = False, ):
+        self.words = []
         self.__original_sentence = sentence
         corrected_by_txt_blb = self.sentence_tokenizer.tokenize(
             correct_spelling_txt_blb(self.__original_sentence).stripped)
@@ -208,16 +181,14 @@ class ListOfWords:
         self.pos_tags_counter = collections.Counter(
             tag for word, tag in (nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))))
         self.__add_by_left_click = add_by_left_click
-
-    def __repr__(self):
-        return str(self)
+        self.__is_from_file = is_from_file
 
     def __str__(self):
         print("Words: ")
         for word in self.words:
             print("-", word)
         return '\n- Add by left click: ' + str(
-            self.__add_by_left_click) + '\n- Is from file: ' + str(self.is_from_file) + '\n- POS Tags counter' + str(
+            self.__add_by_left_click) + '\n- Is from file: ' + str(self.__is_from_file) + '\n- POS Tags counter' + str(
             self.pos_tags_counter)
 
     def set_left_click(self):
@@ -234,8 +205,49 @@ class ListOfWords:
 def get_freq_word(list_of_words: ListOfWords, freq_dict: dict):
     if isinstance(list_of_words, ListOfWords) and isinstance(freq_dict, dict):
         for word_istance in list_of_words.words:
-            if word_istance.word not in freq_dict.keys():
-                freq_dict[word_istance.word] = 1
+            if word_istance.original_word not in freq_dict.keys():
+                freq_dict[word_istance.original_word] = 1
             else:
-                freq_dict[word_istance.word] += 1
+                freq_dict[word_istance.original_word] += 1
     return freq_dict
+
+
+def object_to_dicts(objct):
+    if isinstance(objct, dict):
+        return {k: object_to_dicts(v) for k, v in objct.items()}
+    elif not isinstance(objct, str) and hasattr(objct, "__iter__"):
+        return [object_to_dicts(v) for v in objct]
+    elif hasattr(objct, "_ast"):
+        return object_to_dicts(objct._ast())
+    elif hasattr(objct, "__dict__"):
+        return {
+            key: object_to_dicts(value)
+            for key, value in objct.__dict__.items()
+            if not callable(value) and not key.startswith('_')
+        }
+    else:
+        return objct
+
+
+def read_json_file(path_to_file):
+    with open(path_to_file, 'r') as f:
+        data = json.load(f)
+    return data
+
+
+def write_object_to_json_file(path_to_file, key, main_dictionary):
+    if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
+        # open file
+        data = read_json_file(path_to_file)
+        # clear file
+        open(path_to_file, 'w').close()
+        # add data
+        file = open(path_to_file, 'a+')
+        data[key].append(main_dictionary)
+        file.seek(0)
+        json.dump(data, file, indent=4)
+    else:
+        file = open(path_to_file, 'w+')
+        tmp = {key: [main_dictionary]}
+        json.dump(tmp, file, indent=4)
+    file.close()

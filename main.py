@@ -1,6 +1,8 @@
 # from RealTimeListenerModule import RealTimeKeyListener
 #
 # real_time_listener = RealTimeKeyListener()
+from types import SimpleNamespace
+
 import System_features_extractor, textblob, os, json
 from spellchecker import SpellChecker
 import nltk
@@ -21,28 +23,40 @@ def read_json_file(path_to_file):
         data = json.load(f)
     return data
 
+def write_word_to_json_file(path_to_file, key, main_dictionary):
+    pass
 
-def write_list_of_words_to_json_file(path_to_file, key, dictionary):
-    if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
-        # open file
-        data = read_json_file(path_to_file)
-        print('data', data, type(data))
-        # clear file
-        open(path_to_file, 'w').close()
-        # add data
-        file = open(path_to_file, 'a+')
-        data[key].append(dictionary)
-        file.seek(0)
-        json.dump(data, file, indent=4)
-    else:
-        file = open(path_to_file, 'w+')
-        tmp = {key: [dictionary]}
-        json.dump(tmp, file, indent=4)
-    file.close()
+
 
 
 list_of_words = System_features_extractor.ListOfWords(sentence)
-print(list_of_words)
+
+
+
+
+# print("\n\n\nTRY: ", convert2serialize(list_of_words),"\n\n\n")
+import dictfier
+
+# query = [
+#     'original_word',
+#     'lemmatized_word',
+#     'corrected_word_txt_blb',
+#     'corrected_candidates_spell_chck',
+#     'distances_txt_blb': {
+#     'levenshtein_distance',
+#     'type_of_lev_operations',
+#     'damerau_levenshtein_distance'
+#     },
+#     'distances_spell_chck' ,
+#     'pos_tag'
+#
+#
+# ]
+# std_info = dictfier.dictfy(list_of_words, query)
+
+# print("LIST_DICT: " ,list_of_words.__dict__)
+# print("WORD_DICT: " ,list_of_words.words[0].__dict__)
+
 print(System_features_extractor.Distances('football', 'fotball'))
 print(System_features_extractor.Distances('frotball', 'fotball'))
 print(System_features_extractor.Distances('footbal', 'fotoball').__dict__)
