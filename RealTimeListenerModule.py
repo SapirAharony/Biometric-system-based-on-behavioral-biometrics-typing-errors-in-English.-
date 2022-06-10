@@ -54,7 +54,7 @@ class RealTimeKeyListener:
         if self.__previous_key in Combinations.END_KEYS and key in Combinations.END_KEYS:
             self.__is_finished()
 
-        elif (key in Combinations.SENTENCE_END_KEYS or key in Combinations.NEW_CONTEXT_KEYS or self.__left_button_mouse_is_pressed or (hasattr(key, 'char') and key.char in Combinations.SENTENCE_END_KEYS)) and self.__sentence:
+        elif ((key in Combinations.SENTENCE_END_KEYS) or (key in Combinations.NEW_CONTEXT_KEYS) or (self.__left_button_mouse_is_pressed) or (hasattr(key, 'char') and key.char in Combinations.SENTENCE_END_KEYS)) and len(self.__sentence)>0:
             self.__on_finished_context()
 
         elif key == keyboard.Key.delete and self.__sentence and self.__position != 0:
@@ -80,7 +80,8 @@ class RealTimeKeyListener:
         """ Method that checks add list of words to file whenever the NEW_CONTEXT_KEYS or  combination is entered."""
         if self.__position == 0:
             self.__list_of_words = SFExtractor.ListOfWords(self.__sentence)
-            SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence', SFExtractor.object_to_dicts(self.__list_of_words))
+            if self.__list_of_words.words:
+                SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence', SFExtractor.object_to_dicts(self.__list_of_words))
             self.__sentence = ''
         else:
             self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[:self.__position])
@@ -93,7 +94,8 @@ class RealTimeKeyListener:
                 self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[self.__position:])
                 if self.__left_button_mouse_is_pressed:
                     self.__list_of_words.set_left_click()
-                SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
+                if self.__list_of_words.words:
+                    SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
                                                       SFExtractor.object_to_dicts(self.__list_of_words))
 
                 self.__list_of_words = None
