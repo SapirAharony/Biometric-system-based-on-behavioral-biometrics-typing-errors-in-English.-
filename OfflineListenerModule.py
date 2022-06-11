@@ -22,7 +22,6 @@ class OfflineListener:
                     text = f.read()
             elif source_path_to_file[-4:] == 'docx':
                 doc = Document(source_path_to_file)
-                text = ''
                 for paragraph in doc.paragraphs:
                     text += paragraph.text
             elif source_path_to_file[-4:] == 'pdf':
@@ -35,7 +34,7 @@ class OfflineListener:
             for sentence in self.__sentence_tokenizer.tokenize(text):
                 __list_of_words = System_features_extractor.ListOfWords(sentence)
                 __list_of_words.is_from_file = True
-                System_features_extractor.write_object_to_json_file(self.destination_json_file_path, 'Sentences',
+                if __list_of_words.words:
+                    System_features_extractor.write_object_to_json_file(self.destination_json_file_path, 'Sentences',
                                                             System_features_extractor.object_to_dicts(__list_of_words))
                 __list_of_words.clear_list()
-

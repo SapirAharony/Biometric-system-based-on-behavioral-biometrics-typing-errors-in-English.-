@@ -35,8 +35,6 @@ class RealTimeKeyListener:
         self.mouse_listener = mouse.Listener(on_click=self.__on_click)
         self.keyboard_listener.start()
         self.mouse_listener.start()
-        self.keyboard_listener.join()
-        self.mouse_listener.join()
 
     def __on_click(self, x, y, button, pressed):
         self.__count_clicks(button)
