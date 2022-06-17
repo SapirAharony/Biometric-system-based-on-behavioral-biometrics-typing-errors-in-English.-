@@ -158,16 +158,18 @@ class ListOfWords:
     __add_by_left_click = False
     __original_sentence = None
     __is_from_file = None
+    # misspelled_words_txt_blb = None
+    # misspelled_words_spell_chckr = None
     words = None
     pos_tags_counter = None
 
     def __init__(self, sentence, add_by_left_click=False, is_from_file=False, ):
         self.words = []
+        # self.misspelled_words_txt_blb = []
+        # self.misspelled_words_spell_chckr = []
         self.__original_sentence = sentence
         corrected_by_txt_blb = correct_spelling_txt_blb(" ".join(self.sentence_tokenizer.tokenize(sentence))).split()
         i = 0
-        print(self.sentence_tokenizer.tokenize(sentence), len(self.sentence_tokenizer.tokenize(sentence)))
-        print(corrected_by_txt_blb, len(corrected_by_txt_blb))
         for word in self.sentence_tokenizer.tokenize(sentence):
             self.words.append(Word(word))
             self.words[len(self.words) - 1].pos_tag = \
@@ -175,9 +177,12 @@ class ListOfWords:
             if correct_spelling_spell_checker(word) != word:
                 self.words[i].corrected_word_spell_chck = correct_spelling_spell_checker(word)
                 self.words[i].distances_spell_chck = Distances(correct_spelling_spell_checker(word), word)
+                # self.misspelled_words_spell_chckr.append(self.words[i])
             if corrected_by_txt_blb[i] != word:
                 self.words[i].corrected_word_txt_blb = corrected_by_txt_blb[i]
                 self.words[i].distances_txt_blb = Distances(corrected_by_txt_blb[i], word)
+                # self.misspelled_words_txt_blb.append(self.words[i])
+
             i += 1
         self.pos_tags_counter = collections.Counter(
             tag for word, tag in (nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))))
@@ -204,6 +209,8 @@ class ListOfWords:
         self.__original_sentence = None
         self.__is_from_file = None
         self.pos_tags_counter = None
+        # self.misspelled_words_spell_chckr = None
+        # self.misspelled_words_txt_blb = None
 
 
 def get_freq_word(list_of_words: ListOfWords, freq_dict: dict):
