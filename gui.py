@@ -95,20 +95,24 @@ def set_path():
 
 def offline_start():
     offline_lstnr = OfflineListener()
-    file_selected = filedialog.askopenfilename(filetypes=[('PDF', '*pdf'), ('DOCX', '*docx'), ('TXT', '*.txt')])
+    file_selected = filedialog.askopenfilename(filetypes=[('TXT', '*.txt'), ('PDF', '*pdf'), ('DOCX', '*docx')])
+    offline_lstnr.source_txt_file_path = file_selected
     tkinter.messagebox.showinfo(title=title,
-                                message="You have just chosen" + str(
-                                    file_selected) + "Destination_file is: " + offline_lstnr.destination_json_file_path)
-    offline_lstnr.read_text_file(file_selected)
+                                message="You have just chosen" + str(file_selected)
+                                        + "\nDestination_file is: " + offline_lstnr.destination_json_file_path)
+    text = offline_lstnr.read_text_file()
+    if text:
+        offline_lstnr.write_to_json_file(text)
 
 
-def agreement(title, message_text):
-    msg_box = tkinter.messagebox.askyesno(title=title, message=message_text)
+def agreement(message_title, message_text):
+    msg_box = tkinter.messagebox.askyesno(title=message_title, message=message_text)
     if not msg_box:
         root.destroy()
 
-def non_agreement (title, message_text):
-    msg_box = tkinter.messagebox.askyesno(title=title, message=message_text)
+
+def non_agreement(message_title, message_text):
+    msg_box = tkinter.messagebox.askyesno(title=message_title, message=message_text)
     if msg_box:
         root.destroy()
 
