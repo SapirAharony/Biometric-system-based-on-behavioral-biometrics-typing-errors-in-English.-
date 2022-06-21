@@ -50,16 +50,13 @@ Personal data will not be used for automated decision making or profiling referr
 
 
 def on_online_start():
-    global online_listener, folder_selected, title
-    print(folder_selected)
+    global online_listener, file_name, title
     if online_listener:
         tkinter.messagebox.showwarning(title=title, message="Listener IS running!")
     else:
         online_listener = RealTimeKeyListener()
-        if folder_selected is not None and os.path.isdir(folder_selected):
-            if folder_selected[-1] == '/':
-                online_listener.destination_json_file_path = folder_selected + 'destination.json'
-            else: online_listener.destination_json_file_path = folder_selected + '/' + 'destination.json'
+        if file_name is not None:
+            online_listener.destination_json_file_path = file_name
         tkinter.messagebox.showwarning(title=title, message="Listener IS running! Your destination file is: " +
                                                             str(online_listener.destination_json_file_path))
 
@@ -86,17 +83,30 @@ def online_stop():
 
 
 def set_path():
-    global online_listener, folder_selected
+    global online_listener, file_name, offline_lstnr
     folder_selected = filedialog.askdirectory()
-    if isinstance(online_listener, RealTimeKeyListener) and os.path.isdir(folder_selected):
-        online_listener.destination_json_file_path = folder_selected
-        print(online_listener.destination_json_file_path )
+    file_name = None
+    if os.path.isdir(folder_selected):
+        if folder_selected[-1] in '/\\':
+            file_name = str(folder_selected) + 'destination.json'
+        elif '\\' in folder_selected:
+            file_name = str(folder_selected) + '\\destination.json'
+        elif '/' in folder_selected:
+            file_name = str(folder_selected) + '/destination.json'
+    if isinstance(online_listener, RealTimeKeyListener) and file_name:
+        online_listener.destination_json_file_path = file_name
+        print(online_listener.destination_json_file_path)
+    if isinstance(offline_lstnr, OfflineListener) and file_name:
+        offline_lstnr.destination_json_file_path = file_name
 
 
 def offline_start():
+    global file_name
     offline_lstnr = OfflineListener()
     file_selected = filedialog.askopenfilename(filetypes=[('TXT', '*.txt'), ('PDF', '*pdf'), ('DOCX', '*docx')])
     offline_lstnr.source_txt_file_path = file_selected
+    if file_name is not None:
+        offline_lstnr.destination_json_file_path = file_name
     tkinter.messagebox.showinfo(title=title,
                                 message="You have just chosen" + str(file_selected)
                                         + "\nDestination_file is: " + offline_lstnr.destination_json_file_path)
@@ -124,7 +134,7 @@ def non_ex_agreement():
 
 
 if __name__ == '__main__':
-    online_listener, folder_selected = None, None
+    online_listener, file_name, offline_lstnr = None, None, None
     root = tk.Tk()
     root.geometry('600x500')
     root.resizable(True, True)
@@ -138,21 +148,25 @@ if __name__ == '__main__':
     start_button.pack(ipadx=5, ipady=5, expand=True)
 
     # stop_button
-    stop_button = tk.Button(root, command=online_stop, text="Stop Online Listener", bg="#939196", width=20, height=1, activebackground='#626868')
+    stop_button = tk.Button(root, command=online_stop, text="Stop Online Listener", bg="#939196", width=20, height=1,
+                            activebackground='#626868')
     stop_button.pack(ipadx=5, ipady=5, expand=True)
     stop_button['font'] = myFont
 
-    offline_btn = tk.Button(root, command=offline_start, text="Offline Listener", bg="#939196", width=20, height=1, activebackground='#626868')
+    offline_btn = tk.Button(root, command=offline_start, text="Offline Listener", bg="#939196", width=20, height=1,
+                            activebackground='#626868')
     offline_btn.pack(ipadx=5, ipady=5, expand=True)
     offline_btn['font'] = myFont
 
-    set_path_button = tk.Button(root, command=set_path, text="Set path for end files", bg="#939196", width=20, height=1, activebackground='#626868')
+    set_path_button = tk.Button(root, command=set_path, text="Set path for end files", bg="#939196", width=20, height=1,
+                                activebackground='#626868')
     set_path_button.pack(ipadx=5, ipady=5, expand=True)
     set_path_button['font'] = myFont
 
     # exit_button
 
-    exit_button = tk.Button(root, text='Exit', command=non_ex_agreement, bg="#939196", width=20, height=1, activebackground='#626868')
+    exit_button = tk.Button(root, text='Exit', command=non_ex_agreement, bg="#939196", width=20, height=1,
+                            activebackground='#626868')
     exit_button.pack(ipadx=5, ipady=5, expand=True)
     exit_button['font'] = myFont
     agreement('GDPR clause', en_msg)

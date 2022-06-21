@@ -8,6 +8,7 @@ import json
 import nltk
 from nltk import collections
 import Levenshtein
+from gingerit.gingerit import GingerIt
 
 
 class Distances:
@@ -25,32 +26,32 @@ class Distances:
                                        "delete": 0,
                                        "transpose": 0}
         self.levenshtein_distance = Levenshtein.distance(str_1, str_2)
-        self.__set_operations(str_1, str_2)
-        self.damerau_levenshtein_distance = len(self.get_string_oprations(str_1, str_2))
+        self.__set_operations()
+        self.damerau_levenshtein_distance = len(self.get_string_oprations())
 
     def __str__(self):
         return '1. ' + self.__word_1 + '\t2. ' + self.__word_2 + '\n\t-D-L distance: ' + str(
             self.damerau_levenshtein_distance) + '\n\t-L distance: ' + str(
             self.levenshtein_distance) + "\n\t-Operations:" + str(self.type_of_lev_operations)
 
-    def __set_operations(self, word_1, word_2, is_damerau=True):
-        for k in self.get_string_oprations(word_1, word_2, is_damerau):
+    def __set_operations(self, is_damerau=True):
+        for k in self.get_string_oprations(is_damerau):
             self.type_of_lev_operations[k[0]] += 1
 
-    def get_string_oprations(self, string_1, string_2, is_damerau=True):
-        dist_matrix = self.__get_damerau_levenshtein_distance_matrix(string_1, string_2, is_damerau=is_damerau)
+    def get_string_oprations(self, is_damerau=True):
+        dist_matrix = self.__get_damerau_levenshtein_distance_matrix(is_damerau=is_damerau)
         i, j = len(dist_matrix), len(dist_matrix[0])
         i -= 1
         j -= 1
         operations_list = []
         while i != -1 and j != -1:
-            if is_damerau:
-                if i > 1 and j > 1 and string_1[i - 1] == string_2[j - 2] and string_1[i - 2] == string_2[j - 1]:
-                    if dist_matrix[i - 2][j - 2] < dist_matrix[i][j]:
-                        operations_list.insert(0, ('transpose', i - 1, i - 2))
-                        i -= 2
-                        j -= 2
-                        continue
+            if is_damerau and i > 1 and j > 1 and self.__word_1[i - 1] == self.__word_2[j - 2] and self.__word_1[i - 2] \
+                    == self.__word_2[j - 1]:
+                if dist_matrix[i - 2][j - 2] < dist_matrix[i][j]:
+                    operations_list.insert(0, ('transpose', i - 1, i - 2))
+                    i -= 2
+                    j -= 2
+                    continue
             tmp = [dist_matrix[i - 1][j - 1], dist_matrix[i][j - 1], dist_matrix[i - 1][j]]
             index = tmp.index(min(tmp))
             if index == 0:
@@ -66,15 +67,15 @@ class Distances:
                 i -= 1
         return operations_list
 
-    def __get_damerau_levenshtein_distance_matrix(self, string1, string2, is_damerau=False):
-        distance_matrix = [[0 for _ in range(len(string2) + 1)] for _ in range(len(string1) + 1)]
-        for i in range(len(string1) + 1):
+    def __get_damerau_levenshtein_distance_matrix(self, is_damerau=False):
+        distance_matrix = [[0 for _ in range(len(self.__word_2) + 1)] for _ in range(len(self.__word_1) + 1)]
+        for i in range(len(self.__word_1) + 1):
             distance_matrix[i][0] = i
-        for j in range(len(string2) + 1):
+        for j in range(len(self.__word_2) + 1):
             distance_matrix[0][j] = j
-        for i in range(len(string1)):
-            for j in range(len(string2)):
-                if string1[i] == string2[j]:
+        for i in range(len(self.__word_1)):
+            for j in range(len(self.__word_2)):
+                if self.__word_1[i] == self.__word_2[j]:
                     cost = 0
                 else:
                     cost = 1
@@ -82,7 +83,7 @@ class Distances:
                                                     distance_matrix[i + 1][j] + 1,  # delete
                                                     distance_matrix[i][j] + cost)  # replace
                 if is_damerau:
-                    if i and j and string1[i] == string2[j - 1] and string1[i - 1] == string2[j]:
+                    if i and j and self.__word_1[i] == self.__word_2[j - 1] and self.__word_1[i - 1] == self.__word_2[j]:
                         distance_matrix[i + 1][j + 1] = min(distance_matrix[i + 1][j + 1],
                                                             distance_matrix[i - 1][j - 1] + cost)  # transpose
         return distance_matrix
@@ -90,18 +91,22 @@ class Distances:
 
 def correct_spelling_spell_checker(word_or_list_of_words):
     """ A function which returns corrected spelling (by SpellChecker)"""
-    if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words and len (word_or_list_of_words) > 1:
-        return str(SpellChecker().correction(word_or_list_of_words.lower()))
-    elif isinstance(word_or_list_of_words, list):
-        return [SpellChecker().correction(word.lower()) for word in list(filter(lambda x: len(x) > 1, word_or_list_of_words))]
+    return SpellChecker().correction(word_or_list_of_words.lower())
+    # if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words and len(word_or_list_of_words) > 1:
+    #     return str(SpellChecker().correction(word_or_list_of_words.lower()))
+    # elif isinstance(word_or_list_of_words, list):
+    #     return [SpellChecker().correction(word.lower()) for word in
+    #             list(filter(lambda x: len(x) > 1, word_or_list_of_words))]
 
 
 def candidates_to_correct_spelling_spell_checker(word_or_list_of_words):
     """ A class which returns canditates spelling (by SpellChecker)"""
-    if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words and len (word_or_list_of_words) > 1:
-        return SpellChecker().candidates(word_or_list_of_words.lower())
-    elif isinstance(word_or_list_of_words, list):
-        return [SpellChecker().candidates(word.lower()) for word in list(filter(lambda x: len(x) > 1, word_or_list_of_words))]
+    return SpellChecker().candidates(word_or_list_of_words.lower())
+    # if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words and len(word_or_list_of_words) > 1:
+    #     return SpellChecker().candidates(word_or_list_of_words.lower())
+    # elif isinstance(word_or_list_of_words, list):
+    #     return [SpellChecker().candidates(word.lower()) for word in
+    #             list(filter(lambda x: len(x) > 1, word_or_list_of_words))]
 
 
 def correct_spelling_autocorrect(sentence) -> str:
@@ -111,7 +116,8 @@ def correct_spelling_autocorrect(sentence) -> str:
 
 def correct_spelling_txt_blb(sentence) -> str:
     """ A function which returns corrected spelling (by TextBlob)"""
-    return textblob.TextBlob(sentence).correct()  # Correcting the text
+    return textblob.TextBlob(sentence).correct()
+
 
 def get_pos_for_word(word: str) -> str:
     """ Method that returns a POS tag for lemmatization """
@@ -127,6 +133,13 @@ def lemmatize_word(word: str) -> str:
     return nltk.stem.WordNetLemmatizer().lemmatize(word, get_pos_for_word(word))
 
 
+def grammar_check (sentence: str, justResult=True):
+    if justResult:
+        return str(GingerIt().parse(sentence)['result'])
+    else:
+        return GingerIt().parse(sentence)
+
+
 class Word:
     original_word = ''
     lemmatized_word = ''
@@ -140,7 +153,7 @@ class Word:
 
     def __init__(self, word):
         self.original_word = word
-        self.lemmatized_word = lemmatize_word (word)
+        self.lemmatized_word = lemmatize_word(word)
 
     def __str__(self):
         tmp = ''
@@ -163,11 +176,12 @@ class ListOfWords:
     sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[^(\'\-)\w]', gaps=True)
     __add_by_left_click = False
     __original_sentence = None
+    __grammarly_corrected_sentence = None
     __is_from_file = None
-    # misspelled_words_txt_blb = None
-    # misspelled_words_spell_chckr = None
     words = None
     pos_tags_counter = None
+    # misspelled_words_txt_blb = None
+    # misspelled_words_spell_chckr = None
 
     def __init__(self, sentence, add_by_left_click=False, is_from_file=False, ):
         self.words = []
@@ -184,7 +198,7 @@ class ListOfWords:
             self.words[len(self.words) - 1].pos_tag = \
                 nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1]
             if correct_spelling_spell_checker(word) is None:
-                print("NONE: " , word)
+                print("NONE: ", word)
             if correct_spelling_spell_checker(word) != word.lower() and correct_spelling_spell_checker(word):
                 self.words[i].corrected_word_spell_chck = correct_spelling_spell_checker(word)
                 self.words[i].distances_spell_chck = Distances(correct_spelling_spell_checker(word), word)
@@ -277,5 +291,3 @@ def write_object_to_json_file(path_to_file, key, main_dictionary):
         tmp = {key: [main_dictionary]}
         json.dump(tmp, file, indent=4)
     file.close()
-
-
