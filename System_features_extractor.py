@@ -91,22 +91,22 @@ class Distances:
 
 def correct_spelling_spell_checker(word_or_list_of_words):
     """ A function which returns corrected spelling (by SpellChecker)"""
-    return SpellChecker().correction(word_or_list_of_words.lower())
-    # if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words and len(word_or_list_of_words) > 1:
-    #     return str(SpellChecker().correction(word_or_list_of_words.lower()))
-    # elif isinstance(word_or_list_of_words, list):
-    #     return [SpellChecker().correction(word.lower()) for word in
-    #             list(filter(lambda x: len(x) > 1, word_or_list_of_words))]
+    # return SpellChecker().correction(word_or_list_of_words.lower())
+    if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words and len(word_or_list_of_words) > 1:
+        return str(SpellChecker().correction(word_or_list_of_words.lower()))
+    elif isinstance(word_or_list_of_words, list):
+        return [SpellChecker().correction(word.lower()) for word in
+                list(filter(lambda x: len(x) > 1, word_or_list_of_words))]
 
 
 def candidates_to_correct_spelling_spell_checker(word_or_list_of_words):
     """ A class which returns canditates spelling (by SpellChecker)"""
-    return SpellChecker().candidates(word_or_list_of_words.lower())
-    # if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words and len(word_or_list_of_words) > 1:
-    #     return SpellChecker().candidates(word_or_list_of_words.lower())
-    # elif isinstance(word_or_list_of_words, list):
-    #     return [SpellChecker().candidates(word.lower()) for word in
-    #             list(filter(lambda x: len(x) > 1, word_or_list_of_words))]
+    # return SpellChecker().candidates(word_or_list_of_words.lower())
+    if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words and len(word_or_list_of_words) > 1:
+        return SpellChecker().candidates(word_or_list_of_words.lower())
+    elif isinstance(word_or_list_of_words, list):
+        return [SpellChecker().candidates(word.lower()) for word in
+                list(filter(lambda x: len(x) > 1, word_or_list_of_words))]
 
 
 def correct_spelling_autocorrect(sentence) -> str:
@@ -197,8 +197,6 @@ class ListOfWords:
             self.words.append(Word(word))
             self.words[len(self.words) - 1].pos_tag = \
                 nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1]
-            if correct_spelling_spell_checker(word) is None:
-                print("NONE: ", word)
             if correct_spelling_spell_checker(word) != word.lower() and correct_spelling_spell_checker(word):
                 self.words[i].corrected_word_spell_chck = correct_spelling_spell_checker(word)
                 self.words[i].distances_spell_chck = Distances(correct_spelling_spell_checker(word), word)
@@ -291,3 +289,19 @@ def write_object_to_json_file(path_to_file, key, main_dictionary):
         tmp = {key: [main_dictionary]}
         json.dump(tmp, file, indent=4)
     file.close()
+
+
+def add_simple_dict_to_json_file(path_to_file, key, dict_obj):
+    # check if is empty
+    if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
+        data = read_json_file(path_to_file)
+        open(path_to_file, 'w').close()
+        file = open(path_to_file, 'a+')
+        if isinstance(dict_obj, dict) and dict_obj.keys() and key in data.keys():
+            for k in dict_obj.keys():
+                if k not in data[key].keys():
+                    data[key][k] = dict_obj[k]
+                elif k in data[key].keys() and (isinstance(data[key][k], int) or isinstance(data[key][k], float)):
+                    data[key][k] += dict_obj[k]
+        json.dump(data, file, indent=4)
+        file.close()

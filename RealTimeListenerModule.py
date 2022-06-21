@@ -106,10 +106,9 @@ class RealTimeKeyListener:
 
     def __is_finished(self):
         """A method that checks if the END KEY COMBINATION is clicked by user """
+        SFExtractor.add_simple_dict_to_json_file(self.destination_json_file_path, 'Keys', self.__keys_counter)
         if self.__sentence:
             self.__on_finished_context(at_the_end=True)
-
-        print("Finished")
         self.mouse_listener.stop()
         self.keyboard_listener.stop()
 
@@ -119,6 +118,7 @@ class RealTimeKeyListener:
             self.__keys_counter[str(click)] = 1
         else:
             self.__keys_counter[str(click)] += 1
+
 
     def __delete_chars(self):
         """A method which is called whenever user presses 'delete' key to delete chars from current writting sentence"""
