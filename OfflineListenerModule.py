@@ -11,7 +11,7 @@ class OfflineListener:
     source_txt_file_path = "C:/Users/user/Desktop/destination_file.json"
     file_types = ['txt', 'pdf', 'docx']
 
-    def read_text_file(self) -> str:
+    def read_ext_file(self) -> str:
         """A method that reads a file .txt, .docx or .pdf and returns text as string. """
         if os.path.isfile(self.source_txt_file_path) and os.path.getsize(self.source_txt_file_path) > 0:
             text = ''

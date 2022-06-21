@@ -91,22 +91,22 @@ class Distances:
 
 def correct_spelling_spell_checker(word_or_list_of_words):
     """ A function which returns corrected spelling (by SpellChecker)"""
-    # return SpellChecker().correction(word_or_list_of_words.lower())
-    if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words and len(word_or_list_of_words) > 1:
-        return str(SpellChecker().correction(word_or_list_of_words.lower()))
-    elif isinstance(word_or_list_of_words, list):
-        return [SpellChecker().correction(word.lower()) for word in
-                list(filter(lambda x: len(x) > 1, word_or_list_of_words))]
+    return SpellChecker().correction(word_or_list_of_words.lower())
+    # if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words and len(word_or_list_of_words) > 1:
+    #     return str(SpellChecker().correction(word_or_list_of_words.lower()))
+    # elif isinstance(word_or_list_of_words, list):
+    #     return [SpellChecker().correction(word.lower()) for word in
+    #             list(filter(lambda x: len(x) > 1, word_or_list_of_words))]
 
 
 def candidates_to_correct_spelling_spell_checker(word_or_list_of_words):
     """ A class which returns canditates spelling (by SpellChecker)"""
-    # return SpellChecker().candidates(word_or_list_of_words.lower())
-    if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words and len(word_or_list_of_words) > 1:
-        return SpellChecker().candidates(word_or_list_of_words.lower())
-    elif isinstance(word_or_list_of_words, list):
-        return [SpellChecker().candidates(word.lower()) for word in
-                list(filter(lambda x: len(x) > 1, word_or_list_of_words))]
+    return SpellChecker().candidates(word_or_list_of_words.lower())
+    # if isinstance(word_or_list_of_words, str) and ' ' not in word_or_list_of_words and len(word_or_list_of_words) > 1:
+    #     return SpellChecker().candidates(word_or_list_of_words.lower())
+    # elif isinstance(word_or_list_of_words, list):
+    #     return [SpellChecker().candidates(word.lower()) for word in
+    #             list(filter(lambda x: len(x) > 1, word_or_list_of_words))]
 
 
 def correct_spelling_autocorrect(sentence) -> str:
@@ -180,16 +180,10 @@ class ListOfWords:
     __is_from_file = None
     words = None
     pos_tags_counter = None
-    # misspelled_words_txt_blb = None
-    # misspelled_words_spell_chckr = None
 
     def __init__(self, sentence, add_by_left_click=False, is_from_file=False, ):
         self.words = []
-        # self.misspelled_words_txt_blb = []
-        # self.misspelled_words_spell_chckr = []
-        # self.misspelled_words_autocorrect=[]
         self.__original_sentence = sentence
-        # corrected_by_txt_blb = correct_spelling_txt_blb(" ".join(self.sentence_tokenizer.tokenize(sentence))).split()
         corrected_by_txt_blb = self.sentence_tokenizer.tokenize(str(correct_spelling_txt_blb(sentence.lower())))
         corrected_by_autocorrect = self.sentence_tokenizer.tokenize(correct_spelling_autocorrect(sentence.lower()))
         i = 0
@@ -200,7 +194,6 @@ class ListOfWords:
             if correct_spelling_spell_checker(word) != word.lower() and correct_spelling_spell_checker(word):
                 self.words[i].corrected_word_spell_chck = correct_spelling_spell_checker(word)
                 self.words[i].distances_spell_chck = Distances(correct_spelling_spell_checker(word), word)
-                # self.misspelled_words_spell_chckr.append(self.words[i])
             if corrected_by_txt_blb[i] != word.lower():
                 self.words[i].corrected_word_txt_blb = corrected_by_txt_blb[i]
                 self.words[i].distances_txt_blb = Distances(corrected_by_txt_blb[i], word)
@@ -236,8 +229,7 @@ class ListOfWords:
         self.__original_sentence = None
         self.__is_from_file = None
         self.pos_tags_counter = None
-        # self.misspelled_words_spell_chckr = None
-        # self.misspelled_words_txt_blb = None
+
 
 
 def get_freq_word(list_of_words: ListOfWords, freq_dict: dict):
@@ -295,13 +287,18 @@ def add_simple_dict_to_json_file(path_to_file, key, dict_obj):
     # check if is empty
     if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
         data = read_json_file(path_to_file)
+        print(data)
+        print(type(data['Sentence']))
         open(path_to_file, 'w').close()
         file = open(path_to_file, 'a+')
-        if isinstance(dict_obj, dict) and dict_obj.keys() and key in data.keys():
-            for k in dict_obj.keys():
-                if k not in data[key].keys():
-                    data[key][k] = dict_obj[k]
-                elif k in data[key].keys() and (isinstance(data[key][k], int) or isinstance(data[key][k], float)):
-                    data[key][k] += dict_obj[k]
+        if isinstance(dict_obj, dict) and dict_obj.keys():
+            if key in data.keys():
+                for k in dict_obj.keys():
+                    if k not in data[key].keys():
+                        data[key][k] = dict_obj[k]
+                    elif k in data[key].keys() and (isinstance(data[key][k], int) or isinstance(data[key][k], float)):
+                        data[key][k] += dict_obj[k]
+            else:
+                data[key] = dict_obj
         json.dump(data, file, indent=4)
         file.close()

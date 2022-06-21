@@ -49,6 +49,7 @@ class RealTimeKeyListener:
         print('position: ', self.__position)
         print('sentence: ', self.__list_of_words)
         self.__count_clicks(key)
+        print(self.__keys_counter)
         if self.__previous_key in Combinations.END_KEYS and key in Combinations.END_KEYS:
             self.__is_finished()
 
