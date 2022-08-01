@@ -1,5 +1,4 @@
-import PyPDF2
-import nltk, os, System_features_extractor, re
+import nltk, os, System_features_extractor, PyPDF2
 from docx import Document
 
 
@@ -11,7 +10,7 @@ class OfflineListener:
     source_txt_file_path = "C:/Users/user/Desktop/destination_file.json"
     file_types = ['txt', 'pdf', 'docx']
 
-    def read_ext_file(self) -> str:
+    def read_text_file(self) -> str:
         """A method that reads a file .txt, .docx or .pdf and returns text as string. """
         if os.path.isfile(self.source_txt_file_path) and os.path.getsize(self.source_txt_file_path) > 0:
             text = ''
@@ -22,7 +21,7 @@ class OfflineListener:
                 doc = Document(self.source_txt_file_path)
                 for paragraph in doc.paragraphs:
                     text += paragraph.text
-            elif self.source_txt_file_path[-4:] == 'pdf':
+            elif self.source_txt_file_path[-3:] == 'pdf':
                 pdf_file = open(self.source_txt_file_path, 'rb')
                 pdf_reader = PyPDF2.PdfFileReader(pdf_file)
                 for page_num in range(0, pdf_reader.numPages):

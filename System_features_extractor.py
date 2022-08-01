@@ -133,7 +133,7 @@ def lemmatize_word(word: str) -> str:
     return nltk.stem.WordNetLemmatizer().lemmatize(word, get_pos_for_word(word))
 
 
-def grammar_check (sentence: str, justResult=True):
+def grammar_check(sentence: str, justResult=True):
     if justResult:
         return str(GingerIt().parse(sentence)['result'])
     else:
@@ -229,7 +229,6 @@ class ListOfWords:
         self.__original_sentence = None
         self.__is_from_file = None
         self.pos_tags_counter = None
-
 
 
 def get_freq_word(list_of_words: ListOfWords, freq_dict: dict):

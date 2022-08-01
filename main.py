@@ -69,5 +69,7 @@ my_tool.close()
 tmp = {'Button.left': 10, 'Key.shift': 3, "'L'": 1, "'e'": 6, "'t'": 6, "'s'": 3, 'Key.space': 11, "'c'": 2, "'h'": 1, "'k'": 2, "'i'": 3, "'f'": 1, "'w'": 1, "'o'": 5, "'r'": 3, "'d'": 1, "'n'": 2, "'.'": 1, "'B'": 1, "'u'": 1, "'m'": 1, "'a'": 2, "'y'": 2, "'b'": 2, 'Key.shift_r': 1, "'?'": 1, "'M'": 1, 'Key.backspace': 1, 'Key.esc': 1, 'Key.f4': 1}
 
 
-from System_features_extractor import add_simple_dict_to_json_file
-add_simple_dict_to_json_file( "C:/Users/user/Desktop/destination_file.json", "Keys", tmp)
+from System_features_extractor import add_simple_dict_to_json_file, grammar_check
+# add_simple_dict_to_json_file( "C:/Users/user/Desktop/destination_file.json", "Keys", tmp)
+
+print(grammar_check('I loves my firend'))
