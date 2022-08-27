@@ -25,7 +25,8 @@ class RealTimeKeyListener:
     __previous_key = None
     __sentence = ""
     __list_of_words = None
-    __keys_counter = {}
+    __printable_keys_counter = {}
+    __non_printable_keys_counter = {}
     destination_json_file_path = "C:/Users/user/Desktop/destination_file.json"
     keyboard_listener = None
     mouse_listener = None
@@ -49,11 +50,14 @@ class RealTimeKeyListener:
         print('position: ', self.__position)
         print('sentence: ', self.__list_of_words)
         self.__count_clicks(key)
-        print(self.__keys_counter)
+        print(self.__printable_keys_counter)
         if self.__previous_key in Combinations.END_KEYS and key in Combinations.END_KEYS:
             self.__is_finished()
 
-        elif ((key in Combinations.SENTENCE_END_KEYS) or (key in Combinations.NEW_CONTEXT_KEYS) or (self.__left_button_mouse_is_pressed) or (hasattr(key, 'char') and key.char in Combinations.SENTENCE_END_KEYS)) and len(self.__sentence)>0:
+        elif ((key in Combinations.SENTENCE_END_KEYS) or (key in Combinations.NEW_CONTEXT_KEYS) or (
+        self.__left_button_mouse_is_pressed) or (
+                      hasattr(key, 'char') and key.char in Combinations.SENTENCE_END_KEYS)) and len(
+                self.__sentence) > 0:
             self.__on_finished_context()
 
         elif key == keyboard.Key.delete and self.__sentence and self.__position != 0:
@@ -79,23 +83,25 @@ class RealTimeKeyListener:
         """ Method that checks add list of words to file whenever the NEW_CONTEXT_KEYS or  combination is entered."""
         if self.__position == 0:
             self.__list_of_words = SFExtractor.ListOfWords(self.__sentence)
-            if self.__list_of_words.words:
-                SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence', SFExtractor.object_to_dicts(self.__list_of_words))
+            if self.__list_of_words.all_words:
+                SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentences',
+                                                      SFExtractor.object_to_dicts(self.__list_of_words))
             self.__sentence = ''
         else:
             self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[:self.__position])
             if self.__left_button_mouse_is_pressed:
-                self.__list_of_words.set_left_click()
+                self.__list_of_words.add_by_left_click = True
                 self.__list_of_words = None
 
-            SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence', SFExtractor.object_to_dicts(self.__list_of_words))
+            SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentences',
+                                                  SFExtractor.object_to_dicts(self.__list_of_words))
             if self.__left_button_mouse_is_pressed or at_the_end:
                 self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[self.__position:])
                 if self.__left_button_mouse_is_pressed:
-                    self.__list_of_words.set_left_click()
-                if self.__list_of_words.words:
-                    SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
-                                                      SFExtractor.object_to_dicts(self.__list_of_words))
+                    self.__list_of_words.add_by_left_click = True
+                if self.__list_of_words.all_words:
+                    SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentences',
+                                                          SFExtractor.object_to_dicts(self.__list_of_words))
 
                 self.__list_of_words = None
                 self.__sentence = ''
@@ -107,18 +113,24 @@ class RealTimeKeyListener:
 
     def __is_finished(self):
         """A method that checks if the END KEY COMBINATION is clicked by user """
-        SFExtractor.add_simple_dict_to_json_file(self.destination_json_file_path, 'Keys', self.__keys_counter)
+        SFExtractor.add_simple_dict_to_json_file(self.destination_json_file_path, 'Keys', self.__printable_keys_counter)
         if self.__sentence:
             self.__on_finished_context(at_the_end=True)
         self.mouse_listener.stop()
         self.keyboard_listener.stop()
 
-    def __count_clicks(self, click):
+    def __count_clicks(self, key):
         """A method that adds each mouse button click to dictionary collecting each click event."""
-        if str(click) not in self.__keys_counter.keys():
-            self.__keys_counter[str(click)] = 1
+        if hasattr(key, 'char'):
+            if str(key) not in self.__printable_keys_counter.keys():
+                self.__printable_keys_counter[str(key)] = 1
+            else:
+                self.__printable_keys_counter[str(key)] += 1
         else:
-            self.__keys_counter[str(click)] += 1
+            if str(key) not in self.__non_printable_keys_counter.keys():
+                self.__non_printable_keys_counter[str(key)] = 1
+            else:
+                self.__non_printable_keys_counter[str(key)] += 1
 
 
     def __delete_chars(self):
@@ -147,5 +159,3 @@ class RealTimeKeyListener:
                 self.__sentence += char
             else:
                 self.__sentence = self.__sentence[:self.__position] + char + self.__sentence[self.__position:]
-
-
