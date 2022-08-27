@@ -7,6 +7,7 @@ import nltk.data
 import System_features_extractor as SFExtractor
 
 
+
 class Combinations:
     """A class which includes key combinations or sets of keys."""
     END_KEYS = [keyboard.Key.esc, keyboard.Key.f4]  # key combination to finish listening
@@ -26,6 +27,7 @@ class RealTimeKeyListener:
     __sentence = ""
     __list_of_words = None
     __keys_counter = {}
+    __non_printable_counter = {}
     destination_json_file_path = "C:/Users/user/Desktop/destination_file.json"
     keyboard_listener = None
     mouse_listener = None
@@ -49,11 +51,14 @@ class RealTimeKeyListener:
         print('position: ', self.__position)
         print('sentence: ', self.__list_of_words)
         self.__count_clicks(key)
-        print(self.__keys_counter)
+        self.__count_no_printable_keys(key)
+
         if self.__previous_key in Combinations.END_KEYS and key in Combinations.END_KEYS:
             self.__is_finished()
 
-        elif ((key in Combinations.SENTENCE_END_KEYS) or (key in Combinations.NEW_CONTEXT_KEYS) or (self.__left_button_mouse_is_pressed) or (hasattr(key, 'char') and key.char in Combinations.SENTENCE_END_KEYS)) and len(self.__sentence)>0:
+        elif ((key in Combinations.SENTENCE_END_KEYS) or (key in Combinations.NEW_CONTEXT_KEYS)
+              or (self.__left_button_mouse_is_pressed) or (hasattr(key, 'char') and key.char in Combinations.SENTENCE_END_KEYS)) \
+                and len(self.__sentence) > 0:
             self.__on_finished_context()
 
         elif key == keyboard.Key.delete and self.__sentence and self.__position != 0:
@@ -108,6 +113,8 @@ class RealTimeKeyListener:
     def __is_finished(self):
         """A method that checks if the END KEY COMBINATION is clicked by user """
         SFExtractor.add_simple_dict_to_json_file(self.destination_json_file_path, 'Keys', self.__keys_counter)
+        SFExtractor.add_simple_dict_to_json_file(self.destination_json_file_path, 'No_printable_keys', self.__non_printable_counter)
+
         if self.__sentence:
             self.__on_finished_context(at_the_end=True)
         self.mouse_listener.stop()
@@ -120,6 +127,12 @@ class RealTimeKeyListener:
         else:
             self.__keys_counter[str(click)] += 1
 
+    def __count_no_printable_keys(self, click):
+        if isinstance(click, keyboard.Key):
+            if str(click) not in self.__non_printable_counter.keys():
+                self.__non_printable_counter[str(click)] = 1
+            else:
+                self.__non_printable_counter[str(click)] += 1
 
     def __delete_chars(self):
         """A method which is called whenever user presses 'delete' key to delete chars from current writting sentence"""
