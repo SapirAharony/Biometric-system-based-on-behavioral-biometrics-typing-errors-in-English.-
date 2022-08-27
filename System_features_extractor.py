@@ -9,7 +9,7 @@ import Levenshtein
 language_tool = language_tool_python.LanguageTool('en-US')
 
 
-def get_damerau_levenshtein_distance_matrix(word_1: str, word_2: str, is_damerau: bool =False):
+def get_damerau_levenshtein_distance_matrix(word_1: str, word_2: str, is_damerau: bool = False):
     distance_matrix = [[0 for _ in range(len(word_2) + 1)] for _ in range(len(word_1) + 1)]
     for i in range(len(word_1) + 1):
         distance_matrix[i][0] = i
@@ -106,6 +106,8 @@ class ListOfWords:
     """ A class which includes words, which are separated by NEXT_WORD_COMBINATION"""
     sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[^(\'\-)\w]', gaps=True)
     pos_tags_counter = None
+    add_by_left_click = None
+    is_from_file = None
 
     def __init__(self, sentence, add_by_left_click=False, is_from_file=False):
         self.original_sentence = sentence
@@ -123,6 +125,9 @@ class ListOfWords:
             i += 1
         self.add_by_left_click = add_by_left_click
         self.is_from_file = is_from_file
+
+    def set_left_click(self):
+        self.add_by_left_click = True
 
     def clear_list(self):
         self.add_by_left_click = False
@@ -158,6 +163,7 @@ def object_to_dicts(objct):
         }
     else:
         return objct
+
 
 
 def read_json_file(path_to_file):

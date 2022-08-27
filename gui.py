@@ -94,10 +94,10 @@ def set_path():
         elif '/' in folder_selected:
             file_name = str(folder_selected) + '/destination.json'
     if isinstance(online_listener, RealTimeKeyListener) and file_name:
-        online_listener.destination_json_file_path = file_name [:-5] + "_online" + file_name [-5:]
+        online_listener.destination_json_file_path = file_name[:-5] + "_online" + file_name[-5:]
         print(online_listener.destination_json_file_path)
     if isinstance(offline_lstnr, OfflineListener) and file_name:
-        offline_lstnr.destination_json_file_path = file_name [:-5] + "_offline" + file_name [-5:]
+        offline_lstnr.destination_json_file_path = file_name[:-5] + "_offline" + file_name[-5:]
 
 
 def offline_start():
@@ -106,7 +106,7 @@ def offline_start():
     file_selected = filedialog.askopenfilename(filetypes=[('TXT', '*.txt'), ('PDF', '*pdf'), ('DOCX', '*docx')])
     offline_lstnr.source_txt_file_path = file_selected
     if file_name is not None:
-        offline_lstnr.destination_json_file_path = file_name [:-5] + "_offline" + file_name [-5:]
+        offline_lstnr.destination_json_file_path = file_name[:-5] + "_offline" + file_name[-5:]
     tkinter.messagebox.showinfo(title=title,
                                 message="You have just chosen" + str(file_selected)
                                         + "\nDestination_file is: " + offline_lstnr.destination_json_file_path)
