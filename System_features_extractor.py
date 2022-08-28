@@ -94,11 +94,13 @@ def correct_language_tool(sentence: str) -> str:
     return language_tool.correct(sentence)
 
 class Word:
+    lev_threshold = 0.5
     def __init__(self, word: str, pos_tag: str, corrected_word: str = None):
         self.original_word = word
         self.corrected_word = corrected_word
         self.pos_tag = pos_tag
-        if corrected_word is not None:
+        if corrected_word is not None and (int(Levenshtein.distance(self.original_word, self.corrected_word))/len
+            (self.original_word)) <= self.lev_threshold:
             self.distance = Distances(self.original_word, self.corrected_word)
 
 
@@ -108,16 +110,18 @@ class ListOfWords:
     pos_tags_counter = None
     add_by_left_click = None
     is_from_file = None
+    lev_threshold = 0.35
 
     def __init__(self, sentence, add_by_left_click=False, is_from_file=False):
         self.original_sentence = sentence
         self.corrected_sentence = correct_language_tool(sentence)
         self.all_words = []
         self.misspelled_words = []
-        if self.original_sentence.lower() != self.corrected_sentence.lower():
+        if self.original_sentence.lower() != self.corrected_sentence.lower() and (int(Levenshtein.distance(self.original_sentence, self.corrected_sentence))/len(self.original_sentence)) <= self.lev_threshold:
             self.sentence_distances = Distances(self.original_sentence, self.corrected_sentence)
         i = 0
-        for original_word, correct_word in zip(self.sentence_tokenizer.tokenize(self.original_sentence), self.sentence_tokenizer.tokenize(self.corrected_sentence)):
+        for original_word, correct_word in zip(self.sentence_tokenizer.tokenize(self.original_sentence),
+                                               self.sentence_tokenizer.tokenize(self.corrected_sentence)):
             tag = nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1]
             if original_word.lower() != correct_word.lower():
                 self.all_words.append(Word(original_word, tag, correct_word))
