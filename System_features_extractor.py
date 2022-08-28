@@ -114,6 +114,8 @@ class ListOfWords:
         self.corrected_sentence = correct_language_tool(sentence)
         self.all_words = []
         self.misspelled_words = []
+        if self.original_sentence.lower() != self.corrected_sentence.lower():
+            self.sentence_distances = Distances(self.original_sentence, self.corrected_sentence)
         i = 0
         for original_word, correct_word in zip(self.sentence_tokenizer.tokenize(self.original_sentence), self.sentence_tokenizer.tokenize(self.corrected_sentence)):
             tag = nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1]

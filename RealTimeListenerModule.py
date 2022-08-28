@@ -47,12 +47,8 @@ class RealTimeKeyListener:
     def __on_press(self, key):
         """A method which is called whenever user presses a key. It checks type of typing key and call other functions,
          whenever definded trigger happens."""
-        print("\nSentence: ", self.__sentence)
-        print('position: ', self.__position)
-        print('sentence: ', self.__list_of_words)
         self.__count_clicks(key)
         self.__count_no_printable_keys(key)
-
         if self.__previous_key in Combinations.END_KEYS and key in Combinations.END_KEYS:
             self.__is_finished()
 
@@ -160,4 +156,3 @@ class RealTimeKeyListener:
                 self.__sentence += char
             else:
                 self.__sentence = self.__sentence[:self.__position] + char + self.__sentence[self.__position:]
-
