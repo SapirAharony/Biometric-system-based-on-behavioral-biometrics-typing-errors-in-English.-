@@ -31,7 +31,7 @@ def get_damerau_levenshtein_distance_matrix(word_1: str, word_2: str, is_damerau
     return distance_matrix
 
 
-def get_string_oprations( word_1, word_2, is_damerau=True):
+def get_string_oprations(word_1, word_2, is_damerau=True):
     dist_matrix = get_damerau_levenshtein_distance_matrix(word_1, word_2, is_damerau=is_damerau)
     i, j = len(dist_matrix), len(dist_matrix[0])
     i -= 1
@@ -84,6 +84,7 @@ class Distances:
         for k in get_string_oprations(self.__word_1, self.__word_2, is_damerau):
             self.type_of_d_l_operations[k[0]] += 1
 
+
 def correct_spelling_autocorrect(sentence) -> str:
     """ A function which returns corrected spelling (by Speller from autocorrect)"""
     return Speller()(sentence)
@@ -93,15 +94,18 @@ def correct_language_tool(sentence: str) -> str:
     """ A function which returns corrected sentence (by language_tool from language_tool_python)"""
     return language_tool.correct(sentence)
 
+
 class Word:
     lev_threshold = 0.5
-    def __init__(self, word: str, pos_tag: str, corrected_word: str = None):
+
+    def __init__(self, word: str, pos_tag: str, corrected_word: str = None, use_treshold: bool = True):
         self.original_word = word
         self.corrected_word = corrected_word
         self.pos_tag = pos_tag
-        if corrected_word is not None and (int(Levenshtein.distance(self.original_word, self.corrected_word))/len
-            (self.original_word)) <= self.lev_threshold:
-            self.distance = Distances(self.original_word, self.corrected_word)
+        if corrected_word is not None:
+            if (use_treshold and (int(Levenshtein.distance(self.original_word, self.corrected_word)) / len
+                (self.original_word)) <= self.lev_threshold) or not use_treshold:
+                self.distance = Distances(self.original_word, self.corrected_word)
 
 
 class ListOfWords:
@@ -112,12 +116,16 @@ class ListOfWords:
     is_from_file = None
     lev_threshold = 0.35
 
-    def __init__(self, sentence, add_by_left_click=False, is_from_file=False):
+    def __init__(self, sentence: str, add_by_left_click: bool = False, is_from_file: bool = False,
+                 use_treshold: bool = True):
         self.original_sentence = sentence
         self.corrected_sentence = correct_language_tool(sentence)
         self.all_words = []
         self.misspelled_words = []
-        if self.original_sentence.lower() != self.corrected_sentence.lower() and (int(Levenshtein.distance(self.original_sentence, self.corrected_sentence))/len(self.original_sentence)) <= self.lev_threshold:
+        if (use_treshold and self.original_sentence.lower() != self.corrected_sentence.lower() and (
+                int(Levenshtein.distance(self.original_sentence, self.corrected_sentence)) / len(
+                self.original_sentence)) <= self.lev_threshold) or (
+                not use_treshold and self.original_sentence.lower() != self.corrected_sentence.lower()):
             self.sentence_distances = Distances(self.original_sentence, self.corrected_sentence)
         i = 0
         for original_word, correct_word in zip(self.sentence_tokenizer.tokenize(self.original_sentence),
@@ -169,7 +177,6 @@ def object_to_dicts(objct):
         }
     else:
         return objct
-
 
 
 def read_json_file(path_to_file):
