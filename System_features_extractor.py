@@ -71,14 +71,14 @@ class Distances:
     def __init__(self, str_1, str_2):
         self.__word_1 = str_1
         self.__word_2 = str_2
+        self.damerau_levenshtein_distance = len(get_string_oprations(self.__word_1, self.__word_2, is_damerau=True))
         self.type_of_d_l_operations = {"insert": 0,
                                        "replace": 0,
                                        "delete": 0,
                                        "transpose": 0}
-        self.levenshtein_distance = Levenshtein.distance(self.__word_1.lower(), self.__word_2.lower())
-        self.jaro_winkler = Levenshtein.jaro_winkler(self.__word_1.lower(), self.__word_2.lower())
+        self.levenshtein_distance = Levenshtein.distance(self.__word_1, self.__word_2)
+        self.jaro_winkler = Levenshtein.jaro_winkler(self.__word_1, self.__word_2)
         self.set_operations()
-        self.damerau_levenshtein_distance = len(get_string_oprations(self.__word_1, self.__word_2, is_damerau=True))
 
     def set_operations(self, is_damerau=True):
         for k in get_string_oprations(self.__word_1, self.__word_2, is_damerau):
@@ -98,7 +98,8 @@ def correct_language_tool(sentence: str) -> str:
 class Word:
     lev_threshold = 0.5
 
-    def __init__(self, word: str, pos_tag: str, corrected_word: str = None, corrected_word_tag:str = None, use_treshold: bool = True):
+    def __init__(self, word: str, pos_tag: str, corrected_word: str = None, corrected_word_tag: str = None,
+                 use_treshold: bool = True):
         self.original_word = word
         self.pos_tag = pos_tag
         self.corrected_word = corrected_word
@@ -122,13 +123,15 @@ class ListOfWords:
         self.corrected_sentence = correct_language_tool(sentence)
         self.all_words = []
         self.misspelled_words = []
-        self.original_sentence_structure = [tag[1] for tag in nltk.pos_tag(self.sentence_tokenizer.tokenize(self.original_sentence.lower()))]
-        self.original_sentence_structure = [tag[1] for tag in nltk.pos_tag(self.sentence_tokenizer.tokenize(self.original_sentence.lower()))]
-        if self.original_sentence.lower() != self.corrected_sentence.lower():
+        self.original_sentence_structure = [tag[1] for tag in nltk.pos_tag(
+            self.sentence_tokenizer.tokenize(self.original_sentence))]
+        if self.original_sentence != self.corrected_sentence:
             self.corrected_sentence_structure = [tag[1] for tag in nltk.pos_tag(
-                self.sentence_tokenizer.tokenize(self.corrected_sentence.lower()))]
+                self.sentence_tokenizer.tokenize(self.corrected_sentence))]
+            if self.corrected_sentence_structure == self.original_sentence_structure:
+                self.corrected_sentence_structure = None
             if (use_treshold and int(Levenshtein.distance(self.original_sentence, self.corrected_sentence)) / (len(
-                self.original_sentence)) <= self.lev_threshold) or not use_treshold:
+                    self.original_sentence)) <= self.lev_threshold) or not use_treshold:
                 self.sentence_distances = Distances(self.original_sentence, self.corrected_sentence)
         else:
             self.corrected_sentence_structure = None
@@ -137,8 +140,11 @@ class ListOfWords:
         for original_word, correct_word in zip(self.sentence_tokenizer.tokenize(self.original_sentence),
                                                self.sentence_tokenizer.tokenize(self.corrected_sentence)):
             tag = self.original_sentence_structure[i]
-            if original_word.lower() != correct_word.lower():
-                correct_word_tag = self.corrected_sentence_structure[i]
+            if original_word != correct_word:
+                if self.corrected_sentence_structure is not None:
+                    correct_word_tag = self.corrected_sentence_structure[i]
+                else:
+                    correct_word_tag = None
                 self.all_words.append(Word(original_word, tag, correct_word, correct_word_tag))
                 self.misspelled_words.append(Word(original_word, tag, correct_word, correct_word_tag))
             else:

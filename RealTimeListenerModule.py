@@ -28,6 +28,7 @@ class RealTimeKeyListener:
     __list_of_words = None
     __keys_counter = {}
     __non_printable_counter = {}
+    __entered_keys = []
     destination_json_file_path = "C:/Users/user/Desktop/destination_file.json"
     keyboard_listener = None
     mouse_listener = None
@@ -122,6 +123,7 @@ class RealTimeKeyListener:
             self.__keys_counter[str(click)] = 1
         else:
             self.__keys_counter[str(click)] += 1
+        self.__entered_keys.append(str(click))
 
     def __count_no_printable_keys(self, click):
         if isinstance(click, keyboard.Key):
