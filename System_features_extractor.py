@@ -98,10 +98,11 @@ def correct_language_tool(sentence: str) -> str:
 class Word:
     lev_threshold = 0.5
 
-    def __init__(self, word: str, pos_tag: str, corrected_word: str = None, use_treshold: bool = True):
+    def __init__(self, word: str, pos_tag: str, corrected_word: str = None, corrected_word_tag:str = None, use_treshold: bool = True):
         self.original_word = word
-        self.corrected_word = corrected_word
         self.pos_tag = pos_tag
+        self.corrected_word = corrected_word
+        self.corrected_word_tag = corrected_word_tag
         if corrected_word is not None:
             if (use_treshold and (int(Levenshtein.distance(self.original_word, self.corrected_word)) / len
                 (self.original_word)) <= self.lev_threshold) or not use_treshold:
@@ -111,7 +112,6 @@ class Word:
 class ListOfWords:
     """ A class which includes words, which are separated by NEXT_WORD_COMBINATION"""
     sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[^(\'\-)\w]', gaps=True)
-    pos_tags_counter = None
     add_by_left_click = None
     is_from_file = None
     lev_threshold = 0.35
@@ -122,18 +122,25 @@ class ListOfWords:
         self.corrected_sentence = correct_language_tool(sentence)
         self.all_words = []
         self.misspelled_words = []
-        if (use_treshold and self.original_sentence.lower() != self.corrected_sentence.lower() and (
-                int(Levenshtein.distance(self.original_sentence, self.corrected_sentence)) / len(
-                self.original_sentence)) <= self.lev_threshold) or (
-                not use_treshold and self.original_sentence.lower() != self.corrected_sentence.lower()):
-            self.sentence_distances = Distances(self.original_sentence, self.corrected_sentence)
+        self.original_sentence_structure = [tag[1] for tag in nltk.pos_tag(self.sentence_tokenizer.tokenize(self.original_sentence.lower()))]
+        self.original_sentence_structure = [tag[1] for tag in nltk.pos_tag(self.sentence_tokenizer.tokenize(self.original_sentence.lower()))]
+        if self.original_sentence.lower() != self.corrected_sentence.lower():
+            self.corrected_sentence_structure = [tag[1] for tag in nltk.pos_tag(
+                self.sentence_tokenizer.tokenize(self.corrected_sentence.lower()))]
+            if (use_treshold and int(Levenshtein.distance(self.original_sentence, self.corrected_sentence)) / (len(
+                self.original_sentence)) <= self.lev_threshold) or not use_treshold:
+                self.sentence_distances = Distances(self.original_sentence, self.corrected_sentence)
+        else:
+            self.corrected_sentence_structure = None
+            self.sentence_distances = None
         i = 0
         for original_word, correct_word in zip(self.sentence_tokenizer.tokenize(self.original_sentence),
                                                self.sentence_tokenizer.tokenize(self.corrected_sentence)):
-            tag = nltk.pos_tag(self.sentence_tokenizer.tokenize(sentence.lower()))[i][1]
+            tag = self.original_sentence_structure[i]
             if original_word.lower() != correct_word.lower():
-                self.all_words.append(Word(original_word, tag, correct_word))
-                self.misspelled_words.append(Word(original_word, tag, correct_word))
+                correct_word_tag = self.corrected_sentence_structure[i]
+                self.all_words.append(Word(original_word, tag, correct_word, correct_word_tag))
+                self.misspelled_words.append(Word(original_word, tag, correct_word, correct_word_tag))
             else:
                 self.all_words.append(Word(original_word, tag))
             i += 1
