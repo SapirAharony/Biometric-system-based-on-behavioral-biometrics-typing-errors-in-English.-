@@ -28,6 +28,7 @@ class RealTimeKeyListener:
     __list_of_words = None
     __keys_counter = {}
     __non_printable_counter = {}
+    __non_printable_digraphs = []
     __pressed_keys = []
     destination_json_file_path = "C:/Users/user/Desktop/destination_file.json"
     keyboard_listener = None
@@ -41,7 +42,6 @@ class RealTimeKeyListener:
 
     def __on_click(self, x, y, button, pressed):
         self.__count_clicks(button)
-        print('self.__left_button_mouse_is_pressed: ', self.__left_button_mouse_is_pressed)
         if pressed and button == mouse.Button.left:
             self.__left_button_mouse_is_pressed = True
 
@@ -105,7 +105,10 @@ class RealTimeKeyListener:
             else:
                 self.__sentence = self.__sentence[self.__position:]
         SFExtractor.add_list_to_json_file(self.destination_json_file_path, 'Pressed keys', self.__pressed_keys)
+        SFExtractor.add_list_to_json_file(self.destination_json_file_path, 'Digraphs', self.__non_printable_digraphs)
+        # print('Digraphs: ', self.__non_printable_digraphs)
         self.__pressed_keys.clear()
+        self.__non_printable_digraphs.clear()
         self.__list_of_words = None
 
     def __is_finished(self):
@@ -124,14 +127,20 @@ class RealTimeKeyListener:
             self.__keys_counter[str(click)] = 1
         else:
             self.__keys_counter[str(click)] += 1
+        self.__record_non_printable_digraphs_keys(click)
         self.__pressed_keys.append(str(click))
 
+    def __record_non_printable_digraphs_keys(self, click):
+        if (isinstance(click, keyboard.Key) and click not in Combinations.NUMPAD_NUMBERS_KEYS) or (isinstance(self.__previous_key, keyboard.Key) and click not in Combinations.NUMPAD_NUMBERS_KEYS):
+            self.__non_printable_digraphs.append([str(self.__previous_key), str(click)])
+
     def __count_no_printable_keys(self, click):
-        if isinstance(click, keyboard.Key):
+        if isinstance(click, keyboard.Key) and click not in Combinations.NUMPAD_NUMBERS_KEYS:
             if str(click) not in self.__non_printable_counter.keys():
                 self.__non_printable_counter[str(click)] = 1
             else:
                 self.__non_printable_counter[str(click)] += 1
+
 
     def __delete_chars(self):
         """A method which is called whenever user presses 'delete' key to delete chars from current writting sentence"""
