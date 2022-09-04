@@ -96,6 +96,7 @@ def correct_language_tool(sentence: str) -> str:
 
 
 class Word:
+    """ A class which includes words, which are separated by NEXT_WORD_KEYS"""
     lev_threshold = 0.5
 
     def __init__(self, word: str, pos_tag: str, corrected_word: str = None, corrected_word_tag: str = None,
@@ -198,7 +199,7 @@ def read_json_file(path_to_file):
     return data
 
 
-def write_object_to_json_file(path_to_file, key, main_dictionary):
+def write_object_to_json_file(path_to_file: str, key: str, main_dictionary: dict):
     if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
         # open file
         data = read_json_file(path_to_file)
@@ -216,7 +217,7 @@ def write_object_to_json_file(path_to_file, key, main_dictionary):
     file.close()
 
 
-def add_simple_dict_to_json_file(path_to_file, key, dict_obj):
+def add_simple_dict_to_json_file(path_to_file: str, key: str, dict_obj: dict):
     # check if is empty
     if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
         data = read_json_file(path_to_file)
@@ -233,3 +234,18 @@ def add_simple_dict_to_json_file(path_to_file, key, dict_obj):
                 data[key] = dict_obj
         json.dump(data, file, indent=4)
         file.close()
+
+
+def add_list_to_json_file(path_to_file: str, key: str, list_obj: list):
+    # check if is empty
+    if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
+        data = read_json_file(path_to_file)
+        open(path_to_file, 'w').close()
+        file = open(path_to_file, 'a+')
+        if key in data.keys() and isinstance(data[key], list):
+            data[key].extend(list_obj)
+        elif key not in data.keys():
+            data[key] = list_obj
+        json.dump(data, file, indent=4)
+        file.close()
+

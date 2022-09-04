@@ -28,7 +28,7 @@ class RealTimeKeyListener:
     __list_of_words = None
     __keys_counter = {}
     __non_printable_counter = {}
-    __entered_keys = []
+    __pressed_keys = []
     destination_json_file_path = "C:/Users/user/Desktop/destination_file.json"
     keyboard_listener = None
     mouse_listener = None
@@ -104,13 +104,15 @@ class RealTimeKeyListener:
                 self.__position = 0
             else:
                 self.__sentence = self.__sentence[self.__position:]
-
+        SFExtractor.add_list_to_json_file(self.destination_json_file_path, 'Pressed keys', self.__pressed_keys)
+        self.__pressed_keys.clear()
         self.__list_of_words = None
 
     def __is_finished(self):
         """A method that checks if the END KEY COMBINATION is clicked by user """
         SFExtractor.add_simple_dict_to_json_file(self.destination_json_file_path, 'Keys', self.__keys_counter)
-        SFExtractor.add_simple_dict_to_json_file(self.destination_json_file_path, 'No_printable_keys', self.__non_printable_counter)
+        SFExtractor.add_simple_dict_to_json_file(self.destination_json_file_path, 'No_printable_keys',
+                                                 self.__non_printable_counter)
 
         if self.__sentence:
             self.__on_finished_context(at_the_end=True)
@@ -123,7 +125,7 @@ class RealTimeKeyListener:
             self.__keys_counter[str(click)] = 1
         else:
             self.__keys_counter[str(click)] += 1
-        self.__entered_keys.append(str(click))
+        self.__pressed_keys.append(str(click))
 
     def __count_no_printable_keys(self, click):
         if isinstance(click, keyboard.Key):
