@@ -7,7 +7,6 @@ import nltk.data
 import System_features_extractor as SFExtractor
 
 
-
 class Combinations:
     """A class which includes key combinations or sets of keys."""
     END_KEYS = [keyboard.Key.esc, keyboard.Key.f4]  # key combination to finish listening
@@ -54,7 +53,8 @@ class RealTimeKeyListener:
             self.__is_finished()
 
         elif ((key in Combinations.SENTENCE_END_KEYS) or (key in Combinations.NEW_CONTEXT_KEYS)
-              or (self.__left_button_mouse_is_pressed) or (hasattr(key, 'char') and key.char in Combinations.SENTENCE_END_KEYS)) \
+              or (self.__left_button_mouse_is_pressed) or (
+                      hasattr(key, 'char') and key.char in Combinations.SENTENCE_END_KEYS)) \
                 and len(self.__sentence) > 0:
             self.__on_finished_context()
 
@@ -82,7 +82,8 @@ class RealTimeKeyListener:
         if self.__position == 0:
             self.__list_of_words = SFExtractor.ListOfWords(self.__sentence)
             if self.__list_of_words.all_words:
-                SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence', SFExtractor.object_to_dicts(self.__list_of_words))
+                SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
+                                                      SFExtractor.object_to_dicts(self.__list_of_words))
             self.__sentence = ''
         else:
             self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[:self.__position])
@@ -90,14 +91,15 @@ class RealTimeKeyListener:
                 self.__list_of_words.set_left_click()
                 self.__list_of_words = None
 
-            SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence', SFExtractor.object_to_dicts(self.__list_of_words))
+            SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
+                                                  SFExtractor.object_to_dicts(self.__list_of_words))
             if self.__left_button_mouse_is_pressed or at_the_end:
                 self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[self.__position:])
                 if self.__left_button_mouse_is_pressed:
                     self.__list_of_words.set_left_click()
                 if self.__list_of_words.all_words:
                     SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
-                                                      SFExtractor.object_to_dicts(self.__list_of_words))
+                                                          SFExtractor.object_to_dicts(self.__list_of_words))
 
                 self.__list_of_words = None
                 self.__sentence = ''
@@ -115,7 +117,7 @@ class RealTimeKeyListener:
         """A method that checks if the END KEY COMBINATION is clicked by user """
         SFExtractor.add_simple_dict_to_json_file(self.destination_json_file_path, 'Keys', self.__keys_counter)
         SFExtractor.add_simple_dict_to_json_file(self.destination_json_file_path, 'No printable keys',
-                                                     self.__non_printable_counter)
+                                                 self.__non_printable_counter)
         if self.__sentence:
             self.__on_finished_context(at_the_end=True)
         self.mouse_listener.stop()
@@ -131,7 +133,7 @@ class RealTimeKeyListener:
         self.__pressed_keys.append(str(click))
 
     def __record_non_printable_digraphs_keys(self, click):
-        if (isinstance(click, keyboard.Key) and click not in Combinations.NUMPAD_NUMBERS_KEYS) or (isinstance(self.__previous_key, keyboard.Key) and click not in Combinations.NUMPAD_NUMBERS_KEYS):
+        if (isinstance(click, keyboard.Key) and click not in Combinations.NUMPAD_NUMBERS_KEYS and self.__pressed_keys is not None) or (isinstance(self.__previous_key, keyboard.Key) and click not in Combinations.NUMPAD_NUMBERS_KEYS):
             self.__non_printable_digraphs.append([str(self.__previous_key), str(click)])
 
     def __count_no_printable_keys(self, click):
@@ -140,7 +142,6 @@ class RealTimeKeyListener:
                 self.__non_printable_counter[str(click)] = 1
             else:
                 self.__non_printable_counter[str(click)] += 1
-
 
     def __delete_chars(self):
         """A method which is called whenever user presses 'delete' key to delete chars from current writting sentence"""
