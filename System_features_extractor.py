@@ -117,8 +117,8 @@ class ListOfWords:
     sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[^(\'\-)\w]', gaps=True)
     add_by_left_click = None
     is_from_file = None
-    lev_threshold = 0.35
-    __sentence_reg_pattern = r'^([ \W_]+[^A-z])'
+    lev_threshold = 0.4
+    __sentence_reg_pattern = r'^([ \W_]*[^A-z])'
 
     def __init__(self, sentence: str, add_by_left_click: bool = False, is_from_file: bool = False,
                  use_treshold: bool = True):
