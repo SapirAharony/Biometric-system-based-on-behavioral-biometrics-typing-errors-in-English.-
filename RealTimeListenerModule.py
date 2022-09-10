@@ -5,6 +5,7 @@ import pynput.keyboard as keyboard
 import pynput.mouse as mouse
 import nltk.data
 import System_features_extractor as SFExtractor
+import re
 
 
 class Combinations:
@@ -79,33 +80,34 @@ class RealTimeKeyListener:
 
     def __on_finished_context(self, at_the_end=False):
         """ Method that checks add list of words to file whenever the NEW_CONTEXT_KEYS or  combination is entered."""
-        if self.__position == 0:
-            self.__list_of_words = SFExtractor.ListOfWords(self.__sentence)
-            if self.__list_of_words.all_words:
-                SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
-                                                      SFExtractor.object_to_dicts(self.__list_of_words))
-            self.__sentence = ''
-        else:
-            self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[:self.__position])
-            if self.__left_button_mouse_is_pressed:
-                self.__list_of_words.set_left_click()
-                self.__list_of_words = None
-
-            SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
-                                                  SFExtractor.object_to_dicts(self.__list_of_words))
-            if self.__left_button_mouse_is_pressed or at_the_end:
-                self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[self.__position:])
-                if self.__left_button_mouse_is_pressed:
-                    self.__list_of_words.set_left_click()
+        if re.search('[0-9a-zA-Z]', self.__sentence):
+            if self.__position == 0:
+                self.__list_of_words = SFExtractor.ListOfWords(self.__sentence)
                 if self.__list_of_words.all_words:
                     SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
                                                           SFExtractor.object_to_dicts(self.__list_of_words))
-
-                self.__list_of_words = None
                 self.__sentence = ''
-                self.__position = 0
             else:
-                self.__sentence = self.__sentence[self.__position:]
+                self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[:self.__position])
+                if self.__left_button_mouse_is_pressed:
+                    self.__list_of_words.set_left_click()
+                    self.__list_of_words = None
+
+                SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
+                                                      SFExtractor.object_to_dicts(self.__list_of_words))
+                if self.__left_button_mouse_is_pressed or at_the_end:
+                    self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[self.__position:])
+                    if self.__left_button_mouse_is_pressed:
+                        self.__list_of_words.set_left_click()
+                    if self.__list_of_words.all_words:
+                        SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
+                                                              SFExtractor.object_to_dicts(self.__list_of_words))
+
+                    self.__list_of_words = None
+                    self.__sentence = ''
+                    self.__position = 0
+                else:
+                    self.__sentence = self.__sentence[self.__position:]
         SFExtractor.add_list_to_json_file(self.destination_json_file_path, 'Pressed keys', self.__pressed_keys)
         SFExtractor.add_list_to_json_file(self.destination_json_file_path, 'Digraphs', self.__non_printable_digraphs)
         # print('Digraphs: ', self.__non_printable_digraphs)
