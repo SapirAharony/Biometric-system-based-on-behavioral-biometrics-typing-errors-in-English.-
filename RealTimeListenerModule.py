@@ -77,7 +77,6 @@ class RealTimeKeyListener:
         elif (hasattr(key, 'char') and key.char is not None and len(key.char) < 2) or (
                 key in Combinations.NUMPAD_NUMBERS_KEYS or key == keyboard.Key.space):
             self.__insert_key(key)
-
         self.__previous_key = key
         self.__left_button_mouse_is_pressed = False
         self.__pressed_keys.clear()
