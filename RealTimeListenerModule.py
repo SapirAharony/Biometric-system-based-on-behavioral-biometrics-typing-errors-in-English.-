@@ -50,6 +50,9 @@ class RealTimeKeyListener:
          whenever definded trigger happens."""
         self.__count_clicks(key)
         self.__count_no_printable_keys(key)
+        SFExtractor.add_list_to_json_file(self.destination_json_file_path, 'Pressed keys', self.__pressed_keys)
+        SFExtractor.add_list_to_json_file(self.destination_json_file_path, 'Digraphs', self.__non_printable_digraphs)
+        # print('Digraphs: ', self.__non_printable_digraphs)
         if self.__previous_key in Combinations.END_KEYS and key in Combinations.END_KEYS:
             self.__is_finished()
 
@@ -77,6 +80,8 @@ class RealTimeKeyListener:
 
         self.__previous_key = key
         self.__left_button_mouse_is_pressed = False
+        self.__pressed_keys.clear()
+        self.__non_printable_digraphs.clear()
 
     def __on_finished_context(self, at_the_end=False):
         """ Method that checks add list of words to file whenever the NEW_CONTEXT_KEYS or  combination is entered."""
@@ -108,13 +113,6 @@ class RealTimeKeyListener:
                     self.__position = 0
                 else:
                     self.__sentence = self.__sentence[self.__position:]
-
-
-        SFExtractor.add_list_to_json_file(self.destination_json_file_path, 'Pressed keys', self.__pressed_keys)
-        SFExtractor.add_list_to_json_file(self.destination_json_file_path, 'Digraphs', self.__non_printable_digraphs)
-        # print('Digraphs: ', self.__non_printable_digraphs)
-        self.__pressed_keys.clear()
-        self.__non_printable_digraphs.clear()
         self.__list_of_words = None
 
     def __is_finished(self):
