@@ -138,6 +138,10 @@ def non_ex_agreement():
 
 if __name__ == '__main__':
     online_listener, file_name, offline_lstnr = None, None, None
+    background = '#486098'
+    button_colour = "#FFEDCB"
+    active_button_colour = "#fff6e6"
+
     root = tk.Tk()
     root.geometry('600x500')
     root.resizable(True, True)
@@ -145,31 +149,31 @@ if __name__ == '__main__':
     root.configure(background='#1C5685', highlightbackground='red')
     myFont = font.Font(weight='bold', family='Century Gothic', size=12)
     # start_button
-    start_button = tk.Button(root, command=on_online_start, text="Start Online Listener", bg="#FFEDCB", width=20,
-                             height=1, activebackground='#626868')
+    start_button = tk.Button(root, command=on_online_start, text="Start Online Listener", bg=button_colour, width=20,
+                             height=1, activebackground=active_button_colour)
     start_button['font'] = myFont
     start_button.pack(ipadx=5, ipady=5, expand=True)
 
     # stop_button
-    stop_button = tk.Button(root, command=online_stop, text="Stop Online Listener", bg="#FFEDCB", width=20, height=1,
-                            activebackground='#626868')
+    stop_button = tk.Button(root, command=online_stop, text="Stop Online Listener", bg=button_colour, width=20, height=1,
+                            activebackground=active_button_colour)
     stop_button.pack(ipadx=5, ipady=5, expand=True)
     stop_button['font'] = myFont
 
-    offline_btn = tk.Button(root, command=offline_start, text="Offline Listener", bg="#FFEDCB", width=20, height=1,
-                            activebackground='#626868')
+    offline_btn = tk.Button(root, command=offline_start, text="Offline Listener", bg=button_colour, width=20, height=1,
+                            activebackground=active_button_colour)
     offline_btn.pack(ipadx=5, ipady=5, expand=True)
     offline_btn['font'] = myFont
 
-    set_path_button = tk.Button(root, command=set_path, text="Set path for end files", bg="#FFEDCB", width=20, height=1,
-                                activebackground='#626868')
+    set_path_button = tk.Button(root, command=set_path, text="Set path for end files", bg=button_colour, width=20, height=1,
+                                activebackground=active_button_colour)
     set_path_button.pack(ipadx=5, ipady=5, expand=True)
     set_path_button['font'] = myFont
 
     # exit_button
 
-    exit_button = tk.Button(root, text='Exit', command=non_ex_agreement, bg="#FFEDCB", width=20, height=1,
-                            activebackground='#626868')
+    exit_button = tk.Button(root, text='Exit', command=non_ex_agreement, bg=button_colour, width=20, height=1,
+                            activebackground=active_button_colour)
     exit_button.pack(ipadx=5, ipady=5, expand=True)
     exit_button['font'] = myFont
     agreement('GDPR clause', en_msg)

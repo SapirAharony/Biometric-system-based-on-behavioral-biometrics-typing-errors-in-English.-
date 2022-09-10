@@ -5,6 +5,7 @@ from autocorrect import Speller
 import json
 import nltk
 import Levenshtein
+import re
 
 language_tool = language_tool_python.LanguageTool('en-US')
 
@@ -117,11 +118,14 @@ class ListOfWords:
     add_by_left_click = None
     is_from_file = None
     lev_threshold = 0.35
+    __sentence_reg_pattern = r'^([ \W_]+[^A-z])'
 
     def __init__(self, sentence: str, add_by_left_click: bool = False, is_from_file: bool = False,
                  use_treshold: bool = True):
-        self.original_sentence = sentence
-        self.corrected_sentence = correct_language_tool(sentence)
+        self.original_sentence = re.sub(self.__sentence_reg_pattern, '', sentence)
+        self.corrected_sentence = correct_language_tool(self.original_sentence)
+        if self.original_sentence[0].islower() and self.corrected_sentence[0].isupper():
+            self.original_sentence = self.original_sentence[:1].upper() + self.original_sentence[1:]
         self.all_words = []
         self.misspelled_words = []
         self.original_sentence_structure = [tag[1] for tag in nltk.pos_tag(
