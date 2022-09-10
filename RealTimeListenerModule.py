@@ -108,6 +108,8 @@ class RealTimeKeyListener:
                     self.__position = 0
                 else:
                     self.__sentence = self.__sentence[self.__position:]
+
+
         SFExtractor.add_list_to_json_file(self.destination_json_file_path, 'Pressed keys', self.__pressed_keys)
         SFExtractor.add_list_to_json_file(self.destination_json_file_path, 'Digraphs', self.__non_printable_digraphs)
         # print('Digraphs: ', self.__non_printable_digraphs)
