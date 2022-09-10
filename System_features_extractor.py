@@ -124,7 +124,7 @@ class ListOfWords:
                  use_treshold: bool = True):
         self.original_sentence = re.sub(self.__sentence_reg_pattern, '', sentence)
         self.corrected_sentence = correct_language_tool(self.original_sentence)
-        if self.original_sentence[0].islower() and self.corrected_sentence[0].isupper():
+        if self.original_sentence and (self.original_sentence[0].islower() and self.corrected_sentence[0].isupper()):
             self.original_sentence = self.original_sentence[:1].upper() + self.original_sentence[1:]
         self.all_words = []
         self.misspelled_words = []
