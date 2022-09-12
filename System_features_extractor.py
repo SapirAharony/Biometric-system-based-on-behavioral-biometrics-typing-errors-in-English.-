@@ -6,6 +6,30 @@ import json
 import nltk
 import Levenshtein
 import re
+import textdistance
+import difflib
+
+# class EditOperation:
+#     def __init__(self, old_char: str, idx: int):
+#         self.old_char = old_char
+#         self.char_idx = idx
+#
+#
+# class Insert(EditOperation):
+#     def __init__(self):
+#         pass
+#
+# class Delete(EditOperation):
+#     def __init__(self):
+#         pass
+#
+# class Replace(EditOperation):
+#     def __init__(self):
+#         pass
+#
+# class Transpose(EditOperation):
+#     def __init__(self):
+#         pass
 
 language_tool = language_tool_python.LanguageTool('en-US')
 
@@ -69,7 +93,7 @@ class Distances:
     __word_1 = None
     __word_2 = None
 
-    def __init__(self, str_1, str_2):
+    def __init__(self, str_1, str_2, isTokenizedWord: bool = False):
         self.__word_1 = str_1
         self.__word_2 = str_2
         self.damerau_levenshtein_distance = len(get_string_oprations(self.__word_1, self.__word_2, is_damerau=True))
@@ -80,6 +104,12 @@ class Distances:
         self.levenshtein_distance = Levenshtein.distance(self.__word_1, self.__word_2)
         self.jaro_winkler = Levenshtein.jaro_winkler(self.__word_1, self.__word_2)
         self.set_operations()
+        self.mra = textdistance.mra(self.__word_1, self.__word_2)
+        self.__seq_matcher = difflib.SequenceMatcher(isjunk=None, a=self.__word_1, b=self.__word_2)
+        self.seq_matcher_opcodes = self.__seq_matcher.get_opcodes()
+        self.get_matching_blocks = self.__seq_matcher.get_matching_blocks()
+        # if isTokenizedWord:
+        #     self.overlap = textdistance.overlap(self.__word_1, self.__word_2)
 
     def set_operations(self, is_damerau=True):
         for k in get_string_oprations(self.__word_1, self.__word_2, is_damerau):
@@ -106,10 +136,10 @@ class Word:
         self.pos_tag = pos_tag
         self.corrected_word = corrected_word
         self.corrected_word_tag = corrected_word_tag
-        if corrected_word is not None:
-            if (use_treshold and (int(Levenshtein.distance(self.original_word, self.corrected_word)) / len
-                (self.original_word)) <= self.lev_threshold) or not use_treshold:
-                self.distance = Distances(self.original_word, self.corrected_word)
+        # if corrected_word is not None:
+        #     if (use_treshold and (int(Levenshtein.distance(self.original_word, self.corrected_word)) / len
+        #         (self.original_word)) <= self.lev_threshold) or not use_treshold:
+        #         self.distance = Distances(self.original_word, self.corrected_word)
 
 
 class ListOfWords:
@@ -135,12 +165,12 @@ class ListOfWords:
                 self.sentence_tokenizer.tokenize(self.corrected_sentence))]
             if self.corrected_sentence_structure == self.original_sentence_structure:
                 self.corrected_sentence_structure = None
-            if (use_treshold and int(Levenshtein.distance(self.original_sentence, self.corrected_sentence)) / (len(
-                    self.original_sentence)) <= self.lev_threshold) or not use_treshold:
-                self.sentence_distances = Distances(self.original_sentence, self.corrected_sentence)
+            # if (use_treshold and int(Levenshtein.distance(self.original_sentence, self.corrected_sentence)) / (len(
+            #         self.original_sentence)) <= self.lev_threshold) or not use_treshold:
+            #     self.sentence_distances = Distances(self.original_sentence, self.corrected_sentence)
         else:
             self.corrected_sentence_structure = None
-            self.sentence_distances = None
+            # self.sentence_distances = None
         i = 0
         for original_word, correct_word in zip(self.sentence_tokenizer.tokenize(self.original_sentence),
                                                self.sentence_tokenizer.tokenize(self.corrected_sentence)):
@@ -252,4 +282,3 @@ def add_list_to_json_file(path_to_file: str, key: str, list_obj: list):
             data[key] = list_obj
         json.dump(data, file, indent=4)
         file.close()
-
