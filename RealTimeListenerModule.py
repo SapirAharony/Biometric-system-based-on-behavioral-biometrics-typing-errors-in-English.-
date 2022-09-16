@@ -95,15 +95,14 @@ class RealTimeKeyListener:
                 self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[:self.__position])
                 if self.__left_button_mouse_is_pressed:
                     self.__list_of_words.set_left_click()
-                    self.__list_of_words = None
-
-                SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
+                if self.__list_of_words.original_sentence:
+                    SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
                                                       SFExtractor.object_to_dicts(self.__list_of_words))
                 if self.__left_button_mouse_is_pressed or at_the_end:
                     self.__list_of_words = SFExtractor.ListOfWords(self.__sentence[self.__position:])
                     if self.__left_button_mouse_is_pressed:
                         self.__list_of_words.set_left_click()
-                    if self.__list_of_words.all_words:
+                    if len(self.__list_of_words.original_sentence) > 0:
                         SFExtractor.write_object_to_json_file(self.destination_json_file_path, 'Sentence',
                                                               SFExtractor.object_to_dicts(self.__list_of_words))
 
