@@ -3,7 +3,6 @@ import json
 # listeners
 import pynput.keyboard as keyboard
 import pynput.mouse as mouse
-import nltk.data
 import System_features_extractor as SFExtractor
 import re
 
@@ -21,20 +20,18 @@ class Combinations:
 
 
 class RealTimeKeyListener:
-    __left_button_mouse_is_pressed = False
-    __position = 0  # parameter is <=0
-    __previous_key = None
-    __sentence = ""
-    __list_of_words = None
-    __keys_counter = {}
-    __non_printable_counter = {}
-    __non_printable_digraphs = []
-    __pressed_keys = []
     destination_json_file_path = "C:/Users/user/Desktop/destination_file.json"
-    keyboard_listener = None
-    mouse_listener = None
 
     def __init__(self):
+        self.__left_button_mouse_is_pressed = False
+        self.__position = 0  # parameter is <=0
+        self.__previous_key = None
+        self.__sentence = ""
+        self.__list_of_words = None
+        self.__keys_counter = {}
+        self.__non_printable_counter = {}
+        self.__non_printable_digraphs = []
+        self.__pressed_keys = []
         self.keyboard_listener = keyboard.Listener(on_press=self.__on_press)
         self.mouse_listener = mouse.Listener(on_click=self.__on_click)
         self.keyboard_listener.start()

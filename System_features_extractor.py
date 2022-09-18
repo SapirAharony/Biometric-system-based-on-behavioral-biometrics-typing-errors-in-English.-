@@ -9,129 +9,24 @@ import re
 import textdistance
 import difflib
 
-# class EditOperation:
-#     def __init__(self, old_char: str, idx: int):
-#         self.old_char = old_char
-#         self.char_idx = idx
-#
-#
-# class Insert(EditOperation):
-#     def __init__(self):
-#         pass
-#
-# class Delete(EditOperation):
-#     def __init__(self):
-#         pass
-#
-# class Replace(EditOperation):
-#     def __init__(self):
-#         pass
-#
-# class Transpose(EditOperation):
-#     def __init__(self):
-#         pass
-
-language_tool = language_tool_python.LanguageTool('en-US')
-
-
-def get_damerau_levenshtein_distance_matrix(word_1: str, word_2: str, is_damerau: bool = False):
-    distance_matrix = [[0 for _ in range(len(word_2) + 1)] for _ in range(len(word_1) + 1)]
-    for i in range(len(word_1) + 1):
-        distance_matrix[i][0] = i
-    for j in range(len(word_2) + 1):
-        distance_matrix[0][j] = j
-    for i in range(len(word_1)):
-        for j in range(len(word_2)):
-            if word_1[i] == word_2[j]:
-                cost = 0
-            else:
-                cost = 1
-            distance_matrix[i + 1][j + 1] = min(distance_matrix[i][j + 1] + 1,  # insert
-                                                distance_matrix[i + 1][j] + 1,  # delete
-                                                distance_matrix[i][j] + cost)  # replace
-            if is_damerau:
-                if i and j and word_1[i] == word_2[j - 1] and word_1[i - 1] == word_2[j]:
-                    distance_matrix[i + 1][j + 1] = min(distance_matrix[i + 1][j + 1],
-                                                        distance_matrix[i - 1][j - 1] + cost)  # transpose
-    return distance_matrix
-
-
-def get_string_oprations(word_1, word_2, is_damerau=True):
-    dist_matrix = get_damerau_levenshtein_distance_matrix(word_1, word_2, is_damerau=is_damerau)
-    i, j = len(dist_matrix), len(dist_matrix[0])
-    i -= 1
-    j -= 1
-    operations_list = []
-    while i != -1 and j != -1:
-        if is_damerau and i > 1 and j > 1 and word_1[i - 1] == word_2[j - 2] and word_1[i - 2] \
-                == word_2[j - 1]:
-            if dist_matrix[i - 2][j - 2] < dist_matrix[i][j]:
-                operations_list.insert(0, ('transpose', i - 1, i - 2))
-                i -= 2
-                j -= 2
-                continue
-        tmp = [dist_matrix[i - 1][j - 1], dist_matrix[i][j - 1], dist_matrix[i - 1][j]]
-        index = tmp.index(min(tmp))
-        if index == 0:
-            if dist_matrix[i][j] > dist_matrix[i - 1][j - 1]:
-                operations_list.insert(0, ('replace', i - 1, j - 1))
-            i -= 1
-            j -= 1
-        elif index == 1:
-            operations_list.insert(0, ('insert', i - 1, j - 1))
-            j -= 1
-        elif index == 2:
-            operations_list.insert(0, ('delete', i - 1, i - 1))
-            i -= 1
-    return operations_list
-
-
-class Distances:
-    levenshtein_distance = 0
-    type_of_d_l_operations = None
-    damerau_levenshtein_distance = 0
-    __word_1 = None
-    __word_2 = None
-
-    def __init__(self, str_1, str_2, isTokenizedWord: bool = False):
-        self.__word_1 = str_1
-        self.__word_2 = str_2
-        self.damerau_levenshtein_distance = len(get_string_oprations(self.__word_1, self.__word_2, is_damerau=True))
-        self.type_of_d_l_operations = {"insert": 0,
-                                       "replace": 0,
-                                       "delete": 0,
-                                       "transpose": 0}
-        self.levenshtein_distance = Levenshtein.distance(self.__word_1, self.__word_2)
-        self.jaro_winkler = Levenshtein.jaro_winkler(self.__word_1, self.__word_2)
-        self.set_operations()
-        self.mra = textdistance.mra(self.__word_1, self.__word_2)
-        self.__seq_matcher = difflib.SequenceMatcher(isjunk=None, a=self.__word_1, b=self.__word_2)
-        self.seq_matcher_opcodes = self.__seq_matcher.get_opcodes()
-        self.get_matching_blocks = self.__seq_matcher.get_matching_blocks()
-        # if isTokenizedWord:
-        #     self.overlap = textdistance.overlap(self.__word_1, self.__word_2)
-
-    def set_operations(self, is_damerau=True):
-        for k in get_string_oprations(self.__word_1, self.__word_2, is_damerau):
-            self.type_of_d_l_operations[k[0]] += 1
-
 
 def correct_spelling_autocorrect(sentence) -> str:
     """ A function which returns corrected spelling (by Speller from autocorrect)"""
     return Speller()(sentence)
 
+language_tool = language_tool_python.LanguageTool('en-US')
 
 def correct_language_tool(sentence: str) -> str:
     """ A function which returns corrected sentence (by language_tool from language_tool_python)"""
     return language_tool.correct(sentence)
 
 
+
 class Word:
     """ A class which includes words, which are separated by NEXT_WORD_KEYS"""
     lev_threshold = 0.5
 
-    def __init__(self, word: str, pos_tag: str, corrected_word: str = None, corrected_word_tag: str = None,
-                 use_treshold: bool = True):
+    def __init__(self, word: str, pos_tag: str, corrected_word: str = None, corrected_word_tag: str = None):
         self.original_word = word
         self.pos_tag = pos_tag
         self.corrected_word = corrected_word
@@ -145,13 +40,10 @@ class Word:
 class ListOfWords:
     """ A class which includes words, which are separated by NEXT_WORD_COMBINATION"""
     sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[^(\'\-)\w]', gaps=True)
-    add_by_left_click = None
-    is_from_file = None
     lev_threshold = 0.4
     __sentence_reg_pattern = r'^([ \W_]*[^A-z])'
 
-    def __init__(self, sentence: str, add_by_left_click: bool = False, is_from_file: bool = False,
-                 use_treshold: bool = True):
+    def __init__(self, sentence: str, add_by_left_click: bool = False, is_from_file: bool = False):
         self.original_sentence = re.sub(self.__sentence_reg_pattern, '', sentence)
         self.corrected_sentence = correct_language_tool(self.original_sentence)
         if self.original_sentence and (
@@ -199,6 +91,10 @@ class ListOfWords:
         self.original_sentence = None
         self.corrected_sentence = None
         self.is_from_file = None
+
+    @classmethod
+    def initiate_from_json_file(cls):
+        pass
 
 
 def get_freq_word(list_of_words: ListOfWords, freq_dict: dict):
