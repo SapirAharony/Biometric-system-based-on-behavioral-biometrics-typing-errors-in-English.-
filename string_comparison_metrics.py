@@ -1,80 +1,3 @@
-
-# for operation in operations:
-#     if operation[0] == 'delete':
-#         if operation[1] - 1 >= 0 and operation[1] + 1 < len(word_1) - 1:
-#             ops.append(System_features_extractor.Delete(deleted_char=word_1[operation[1]], idx=operation[1],
-#                                                         previous_char=word_1[operation[1] - 1],
-#                                                         next_char=word_1[operation[1] + 1]))
-#         elif operation[1] - 1 < 0 and operation[1] + 1 > len(word_1) - 1:
-#             ops.append(System_features_extractor.Delete(deleted_char=word_1[operation[1]], idx=operation[1],
-#                                                         previous_char='', next_char=''))
-#         elif operation[1] + 1 > len(word_1) - 1:
-#             ops.append(System_features_extractor.Delete(deleted_char=word_1[operation[1]], idx=operation[1],
-#                                                         previous_char=word_1[operation[1] - 1], next_char=''))
-#         elif operation[1] - 1 < 0:
-#             ops.append(System_features_extractor.Delete(deleted_char=word_1[operation[1]], idx=operation[1],
-#                                                         previous_char='', next_char=word_1[operation[1] + 1]))
-#     elif operation[0] == 'replace':
-#         if operation[1] - 1 >= 0 and operation[1] + 1 < len(word_1) - 1:
-#             ops.append(System_features_extractor.Replace(old_char=word_1[operation[1]], new_char=word_2[operation[2]],
-#                                                          idx=operation[1],
-#                                                          previous_char=word_1[operation[1] - 1],
-#                                                          next_char=word_1[operation[1] + 1]))
-#         elif operation[1] - 1 < 0 and operation[1] + 1 > len(word_1) - 1:
-#             ops.append(System_features_extractor.Replace(old_char=word_1[operation[1]], new_char=word_2[operation[2]],
-#                                                          idx=operation[1],
-#                                                          previous_char='',
-#                                                          next_char=''))
-#
-#         elif operation[1] + 1 > len(word_1) - 1:
-#             ops.append(System_features_extractor.Replace(old_char=word_1[operation[1]], new_char=word_2[operation[2]],
-#                                                          idx=operation[1],
-#                                                          previous_char=word_1[operation[1] - 1],
-#                                                          next_char=''))
-#
-#         elif operation[1] - 1 < 0:
-#             ops.append(System_features_extractor.Replace(old_char=word_1[operation[1]], new_char=word_2[operation[2]],
-#                                                          idx=operation[1],
-#                                                          previous_char='',
-#                                                          next_char=word_1[operation[1] + 1]))
-#
-#
-#     elif operation[0] == 'insert':
-#         if operation[1] >= 0 and operation[1] + 1 <= len(word_1) - 1:
-#             ops.append(System_features_extractor.Insert(new_char=word_2[operation[2]], idx=operation[1] + 1,
-#                                                         previous_char=word_1[operation[1]],
-#                                                         next_char=word_1[operation[1] + 1]))
-#         elif operation[1] < 0 and operation[1] + 1 > len(word_1) - 1:
-#             ops.append(System_features_extractor.Insert(new_char=word_2[operation[2]], idx=operation[1] + 1,
-#                                                         previous_char='',
-#                                                         next_char=""))
-#         elif operation[1] + 1 > len(word_1) - 1:
-#             ops.append(System_features_extractor.Insert(new_char=word_2[operation[2]], idx=operation[1] + 1,
-#                                                         previous_char=word_1[operation[1]],
-#                                                         next_char=''))
-#         elif operation[1] < 0:
-#             ops.append(System_features_extractor.Insert(new_char=word_2[operation[2]], idx=operation[1] + 1,
-#                                                         previous_char="", next_char=word_1[operation[1] + 1]))
-#         print(operation)
-#     else:
-#         if operation[2] - 1 >= 0 and operation[1] + 1 < len(word_1) - 1:
-#             ops.append(System_features_extractor.Transpose(left_char=word_1[operation[2]], idx_left=operation[2],
-#                                                            right_char=word_1[operation[1]], idx_right=operation[1],
-#                                                            previous_char=word_1[operation[2] - 1],
-#                                                            next_char=word_1[operation[1] + 1]))
-#         elif operation[2] - 1 < 0 and operation[1] + 1 > len(word_1) - 1:
-#             ops.append(System_features_extractor.Transpose(left_char=word_1[operation[2]], idx_left=operation[2],
-#                                                            right_char=word_1[operation[1]], idx_right=operation[1],
-#                                                            previous_char='', next_char=''))
-#         elif operation[1] + 1 > len(word_1) - 1:
-#             ops.append(System_features_extractor.Transpose(left_char=word_1[operation[2]], idx_left=operation[2],
-#                                                            right_char=word_1[operation[1]], idx_right=operation[1],
-#                                                            previous_char=word_1[operation[2] - 1], next_char=''))
-#         elif operation[2] - 1 < 0:
-#             ops.append(System_features_extractor.Transpose(left_char=word_1[operation[2]], idx_left=operation[2],
-#                                                            right_char=word_1[operation[1]], idx_right=operation[1],
-#                                                            previous_char="", next_char=word_1[operation[1] + 1]))
-
 import language_tool_python, Levenshtein, textdistance, difflib
 from autocorrect import Speller
 
@@ -127,8 +50,6 @@ class Transpose(EditOperation):
 
     def __repr__(self):
         return f'{self.__class__.__name__}: {self.left_char}({self.char_idx}) <-> {self.right_char}({self.idx_right}); prev:{self.previous_char}, next: {self.next_char}'
-
-
 
 
 def get_damerau_levenshtein_distance_matrix(word_1: str, word_2: str, is_damerau: bool = False):
@@ -184,14 +105,11 @@ def get_string_oprations(word_1, word_2, is_damerau=True):
 
 
 class Distances:
-    def __init__(self, str_1, str_2, isTokenizedWord: bool = False):
+    def __init__(self, str_1, str_2):
         self.__word_1 = str_1
         self.__word_2 = str_2
         self.damerau_levenshtein_distance = len(get_string_oprations(self.__word_1, self.__word_2, is_damerau=True))
-        self.type_of_d_l_operations = {"insert": 0,
-                                       "replace": 0,
-                                       "delete": 0,
-                                       "transpose": 0}
+        self.operations = []
         self.jaro_winkler = Levenshtein.jaro_winkler(self.__word_1, self.__word_2)
         self.set_operations()
         self.mra = textdistance.mra(self.__word_1, self.__word_2)
@@ -204,6 +122,86 @@ class Distances:
         #     self.overlap = textdistance.overlap(self.__word_1, self.__word_2)
 
     def set_operations(self, is_damerau=True):
-        for k in get_string_oprations(self.__word_1, self.__word_2, is_damerau):
-            self.type_of_d_l_operations[k[0]] += 1
+        for operation in get_string_oprations(self.__word_1, self.__word_2, is_damerau):
 
+            if operation[0] == 'delete':
+                if operation[1] - 1 >= 0 and operation[1] + 1 < len(self.__word_1) - 1:
+                    self.operations.append(Delete(deleted_char=self.__word_1[operation[1]], idx=operation[1],
+                                                  previous_char=self.__word_1[operation[1] - 1],
+                                                  next_char=self.__word_1[operation[1] + 1]))
+                elif operation[1] - 1 < 0 and operation[1] + 1 > len(self.__word_1) - 1:
+                    self.operations.append(Delete(deleted_char=self.__word_1[operation[1]], idx=operation[1],
+                                                  previous_char='', next_char=''))
+                elif operation[1] + 1 > len(self.__word_1) - 1:
+                    self.operations.append(Delete(deleted_char=self.__word_1[operation[1]], idx=operation[1],
+                                                  previous_char=self.__word_1[operation[1] - 1], next_char=''))
+                elif operation[1] - 1 < 0:
+                    self.operations.append(Delete(deleted_char=self.__word_1[operation[1]], idx=operation[1],
+                                                  previous_char='', next_char=self.__word_1[operation[1] + 1]))
+
+            elif operation[0] == 'replace':
+                if operation[1] - 1 >= 0 and operation[1] + 1 < len(self.__word_1) - 1:
+                    self.operations.append(
+                        Replace(old_char=self.__word_1[operation[1]], new_char=self.__word_2[operation[2]],
+                                idx=operation[1],
+                                previous_char=self.__word_1[operation[1] - 1],
+                                next_char=self.__word_1[operation[1] + 1]))
+                elif operation[1] - 1 < 0 and operation[1] + 1 > len(self.__word_1) - 1:
+                    self.operations.append(
+                        Replace(old_char=self.__word_1[operation[1]], new_char=self.__word_2[operation[2]],
+                                idx=operation[1],
+                                previous_char='',
+                                next_char=''))
+
+                elif operation[1] + 1 > len(self.__word_1) - 1:
+                    self.operations.append(
+                        Replace(old_char=self.__word_1[operation[1]], new_char=self.__word_2[operation[2]],
+                                idx=operation[1],
+                                previous_char=self.__word_1[operation[1] - 1],
+                                next_char=''))
+
+                elif operation[1] - 1 < 0:
+                    self.operations.append(
+                        Replace(old_char=self.__word_1[operation[1]], new_char=self.__word_2[operation[2]],
+                                idx=operation[1],
+                                previous_char='',
+                                next_char=self.__word_1[operation[1] + 1]))
+
+            elif operation[0] == 'insert':
+                if operation[1] >= 0 and operation[1] + 1 <= len(self.__word_1) - 1:
+                    self.operations.append(Insert(new_char=self.__word_2[operation[2]], idx=operation[1] + 1,
+                                                  previous_char=self.__word_1[operation[1]],
+                                                  next_char=self.__word_1[operation[1] + 1]))
+                elif operation[1] < 0 and operation[1] + 1 > len(self.__word_1) - 1:
+                    self.operations.append(Insert(new_char=self.__word_2[operation[2]], idx=operation[1] + 1,
+                                                  previous_char='',
+                                                  next_char=""))
+                elif operation[1] + 1 > len(self.__word_1) - 1:
+                    self.operations.append(Insert(new_char=self.__word_2[operation[2]], idx=operation[1] + 1,
+                                                  previous_char=self.__word_1[operation[1]],
+                                                  next_char=''))
+                elif operation[1] < 0:
+                    self.operations.append(Insert(new_char=self.__word_2[operation[2]], idx=operation[1] + 1,
+                                                  previous_char="", next_char=self.__word_1[operation[1] + 1]))
+
+            else:
+                if operation[2] - 1 >= 0 and operation[1] + 1 < len(self.__word_1) - 1:
+                    self.operations.append(Transpose(left_char=self.__word_1[operation[2]], idx_left=operation[2],
+                                                     right_char=self.__word_1[operation[1]], idx_right=operation[1],
+                                                     previous_char=self.__word_1[operation[2] - 1],
+                                                     next_char=self.__word_1[operation[1] + 1]))
+                elif operation[2] - 1 < 0 and operation[1] + 1 > len(self.__word_1) - 1:
+                    self.operations.append(Transpose(left_char=self.__word_1[operation[2]], idx_left=operation[2],
+                                                     right_char=self.__word_1[operation[1]], idx_right=operation[1],
+                                                     previous_char='', next_char=''))
+                elif operation[1] + 1 > len(self.__word_1) - 1:
+                    self.operations.append(Transpose(left_char=self.__word_1[operation[2]], idx_left=operation[2],
+                                                     right_char=self.__word_1[operation[1]], idx_right=operation[1],
+                                                     previous_char=self.__word_1[operation[2] - 1], next_char=''))
+                elif operation[2] - 1 < 0:
+                    self.operations.append(Transpose(left_char=self.__word_1[operation[2]], idx_left=operation[2],
+                                                     right_char=self.__word_1[operation[1]], idx_right=operation[1],
+                                                     previous_char="", next_char=self.__word_1[operation[1] + 1]))
+
+    def __repr__(self):
+        return f'{self.__word_1} {self.__word_2} {self.operations} {self.damerau_levenshtein_distance} '

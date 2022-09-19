@@ -148,6 +148,7 @@
 import textdistance, difflib
 
 import System_features_extractor
+import string_comparison_metrics
 
 
 def unique_values(lista: list):
@@ -178,9 +179,13 @@ def unique_values(lista: list):
 # operations = System_features_extractor.get_string_oprations(word_1, word_2)
 
 
-word_1, word_2 = 'rarrer', 'bartek'
-operations = System_features_extractor.get_string_oprations(word_1, word_2)
-print(operations)
+# words = [('rarrer', 'bartek'),
+#          ('kolo', 'olo'),
+#          ('oklo', 'kolo'),
+#          ('olo', 'kolo'),
+#          ('wolo', 'kolo')
+#          ]
+print(string_comparison_metrics.Distances('olo', 'kolow'))
 
 ops = []
 
