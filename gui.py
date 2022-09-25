@@ -2,8 +2,7 @@ import os.path
 import tkinter as tk
 import tkinter.messagebox
 import pynput.keyboard as keyboard
-from RealTimeListenerModule import RealTimeKeyListener
-from OfflineListenerModule import OfflineListener
+from capture_data import RealTimeKeyListener, OfflineListener
 import tkinter.font as font
 from tkinter import filedialog
 

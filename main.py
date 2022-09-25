@@ -147,8 +147,8 @@
 #       textdistance.bag(first_string_tokenized, second_string_tokenized))
 import textdistance, difflib
 
-import System_features_extractor
-import string_comparison_metrics
+import system_features_extractor
+import string_metrics
 
 
 def unique_values(lista: list):
@@ -185,9 +185,40 @@ def unique_values(lista: list):
 #          ('olo', 'kolo'),
 #          ('wolo', 'kolo')
 #          ]
-print(string_comparison_metrics.Distances('olo', 'kolow'))
+# print(string_comparison_metrics.Distances('olo', 'kolow'))
 
 ops = []
 
+# print((System_features_extractor.read_json_file('karola_dest.json').keys()))
+#
+# print(System_features_extractor.read_json_file('karola_dest.json')['Sentence'][3])
 
+from system_features_extractor import ListOfWords
+import os
+
+def extract_data(source_file_path, dest_file_path):
+    keys = System_features_extractor.read_json_file(source_file_path).keys()
+    print(keys)
+    sentences = System_features_extractor.read_json_file(source_file_path)['Sentence']
+    for sentence in sentences:
+        if sentence is not None and isinstance(sentence['original_sentence'], str):
+            list_of_words = ListOfWords(sentence['original_sentence'], sentence['add_by_left_click'],
+                                        sentence['is_from_file'])
+            System_features_extractor.write_object_to_json_file(dest_file_path, 'Sentence',
+                                                                System_features_extractor.object_to_dicts(list_of_words))
+    if 'Keys' in keys:
+        System_features_extractor.add_simple_dict_to_json_file(dest_file_path, 'Keys', System_features_extractor.read_json_file(source_file_path)['Keys'])
+    if 'No printable keys' in keys:
+        System_features_extractor.add_simple_dict_to_json_file(dest_file_path, 'No printable keys',
+                                                                   System_features_extractor.read_json_file(source_file_path)['No printable keys'])
+    if 'Pressed keys' in keys:
+        System_features_extractor.add_list_to_json_file(dest_file_path, 'Pressed keys',
+                                                            System_features_extractor.read_json_file(source_file_path)['Pressed keys'])
+    if 'Digraphs' in keys:
+        System_features_extractor.add_list_to_json_file(dest_file_path, 'Digraphs', System_features_extractor.read_json_file(source_file_path)['Digraphs'])
+
+directory = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files'
+# for file in os.listdir(directory):
+#     print(file, end=' ')
+#     extract_data(directory + '\\' + file, directory + '\\done_' + file)
 
