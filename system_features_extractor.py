@@ -22,21 +22,18 @@ def correct_language_tool(sentence: str) -> str:
 
 class Word:
     """ A class which includes words, which are separated by NEXT_WORD_KEYS"""
-    lev_threshold = 0.5
-
     def __init__(self, word: str, pos_tag: str, corrected_word: str = None, corrected_word_tag: str = None):
         self.original_word = word
         self.pos_tag = pos_tag
         self.corrected_word = corrected_word
         self.corrected_word_tag = corrected_word_tag
         if corrected_word is not None:
-            self.distance = Distances(self.original_word, self.corrected_word)
+            self.distance = Distances(self.original_word, self.corrected_word, is_tokenized=True)
 
 
 class ListOfWords:
     """ A class which includes words, which are separated by NEXT_WORD_COMBINATION"""
     sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[^(\'\-)\w]', gaps=True)
-    lev_threshold = 0.4
     __sentence_reg_pattern = r'^([ \W_]*[^A-z])'
 
     def __init__(self, sentence: str, add_by_left_click: bool = False, is_from_file: bool = False):
@@ -156,6 +153,16 @@ def add_simple_dict_to_json_file(path_to_file: str, key: str, dict_obj: dict):
         json.dump(data, file, indent=4)
         file.close()
 
+def add_name_to_json(path_to_file: str, user_name: str):
+    # check if is empty
+    if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
+        data = read_json_file(path_to_file)
+        open(path_to_file, 'w').close()
+        file = open(path_to_file, 'a+')
+        data["Name"] = user_name
+        json.dump(data, file, indent=4)
+        file.close()
+
 
 def add_list_to_json_file(path_to_file: str, key: str, list_obj: list):
     # check if is empty
@@ -169,3 +176,23 @@ def add_list_to_json_file(path_to_file: str, key: str, list_obj: list):
             data[key] = list_obj
         json.dump(data, file, indent=4)
         file.close()
+
+
+def extract_data(source_file_path, dest_file_path, user_name: str):
+    keys = read_json_file(source_file_path).keys()
+    print(keys)
+    sentences = read_json_file(source_file_path)['Sentence']
+    for sentence in sentences:
+        if sentence is not None and isinstance(sentence['original_sentence'], str):
+            list_of_words = ListOfWords(sentence['original_sentence'], sentence['add_by_left_click'],
+                                        sentence['is_from_file'])
+            write_object_to_json_file(dest_file_path, 'Sentence', object_to_dicts(list_of_words))
+    add_name_to_json(dest_file_path, user_name)
+    if 'Keys' in keys:
+        add_simple_dict_to_json_file(dest_file_path, 'Keys', read_json_file(source_file_path)['Keys'])
+    if 'No printable keys' in keys:
+        add_simple_dict_to_json_file(dest_file_path, 'No printable keys', read_json_file(source_file_path)['No printable keys'])
+    if 'Pressed keys' in keys:
+        add_list_to_json_file(dest_file_path, 'Pressed keys', read_json_file(source_file_path)['Pressed keys'])
+    if 'Digraphs' in keys:
+        add_list_to_json_file(dest_file_path, 'Digraphs', read_json_file(source_file_path)['Digraphs'])

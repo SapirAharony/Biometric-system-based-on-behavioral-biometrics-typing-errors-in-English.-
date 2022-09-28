@@ -106,16 +106,32 @@ def get_string_oprations(word_1, word_2, is_damerau=True):
 
 
 class Distances:
-    def __init__(self, str_1, str_2):
-        self.__word_1 = str_1
-        self.__word_2 = str_2
-        self.damerau_levenshtein_distance = len(get_string_oprations(self.__word_1, self.__word_2, is_damerau=True))
-        self.operations = []
-        self.jaro_winkler = Levenshtein.jaro_winkler(self.__word_1, self.__word_2)
-        self.set_operations()
-        self.mra = textdistance.mra(self.__word_1, self.__word_2)
-        self.gestalt = textdistance.ratcliff_obershelp(self.__word_1, self.__word_2)
-        self.sorensen_dice = textdistance.sorensen_dice(self.__word_1, self.__word_2)
+    lev_treshold = 0.75
+
+    def __init__(self, str_1, str_2, use_treshold: bool = True, is_tokenized: bool = False):
+        if use_treshold and textdistance.levenshtein.normalized_similarity(str_1, str_2) >= self.lev_treshold:
+            self.__word_1 = str_1
+            self.__word_2 = str_2
+            # edit
+            self.damerau_levenshtein_distance = float(
+                len(get_string_oprations(self.__word_1, self.__word_2, is_damerau=True)))
+            self.operations = []
+            self.set_operations()
+            self.jaro_winkler_ns = textdistance.jaro_winkler.normalized_similarity(self.__word_1, self.__word_2)
+
+            # token based
+            if is_tokenized:
+                self.gestalt_ns = textdistance.ratcliff_obershelp.normalized_similarity(self.__word_1, self.__word_2)
+                self.sorensen_dice_ns = textdistance.sorensen_dice.normalized_similarity(self.__word_1, self.__word_2)
+                self.cosine_ns = textdistance.cosine.normalized_similarity(self.__word_1, self.__word_2)
+                self.overlap = textdistance.overlap.normalized_similarity(self.__word_1, self.__word_2)
+
+            # phonetic
+            self.mra_ns = textdistance.mra.normalized_similarity(self.__word_1, self.__word_2)
+
+            # Sequence based
+            self.lcsstr = textdistance.lcsstr.normalized_similarity(self.__word_1, self.__word_2)
+
         # self.__seq_matcher = difflib.SequenceMatcher(isjunk=None, a=self.__word_1, b=self.__word_2)
         # self.seq_matcher_opcodes = self.__seq_matcher.get_opcodes()
         # self.get_matching_blocks = self.__seq_matcher.get_matching_blocks()
@@ -204,5 +220,3 @@ class Distances:
                                                      right_char=self.__word_1[operation[1]], idx_right=operation[1],
                                                      previous_char="", next_char=self.__word_1[operation[1] + 1]))
 
-    def __repr__(self):
-        return f'{self.__word_1} {self.__word_2} {self.operations} {self.damerau_levenshtein_distance} '
