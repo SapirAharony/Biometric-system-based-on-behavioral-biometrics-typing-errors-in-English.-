@@ -106,17 +106,17 @@ def get_string_oprations(word_1, word_2, is_damerau=True):
 
 
 class Distances:
-    lev_treshold = 0.75
+    lev_treshold = 0.65
 
     def __init__(self, str_1, str_2, use_treshold: bool = True, is_tokenized: bool = False):
         if use_treshold and textdistance.levenshtein.normalized_similarity(str_1, str_2) >= self.lev_treshold:
             self.__word_1 = str_1
             self.__word_2 = str_2
-            # edit
-            self.damerau_levenshtein_distance = float(
-                len(get_string_oprations(self.__word_1, self.__word_2, is_damerau=True)))
             self.operations = []
             self.set_operations()
+
+            # edit
+            self.damerau_levenshtein_distance = textdistance.damerau_levenshtein.normalized_similarity(self.__word_1, self.__word_2)
             self.jaro_winkler_ns = textdistance.jaro_winkler.normalized_similarity(self.__word_1, self.__word_2)
 
             # token based
@@ -140,7 +140,6 @@ class Distances:
 
     def set_operations(self, is_damerau=True):
         for operation in get_string_oprations(self.__word_1, self.__word_2, is_damerau):
-
             if operation[0] == 'delete':
                 if operation[1] - 1 >= 0 and operation[1] + 1 < len(self.__word_1) - 1:
                     self.operations.append(Delete(deleted_char=self.__word_1[operation[1]], idx=operation[1],

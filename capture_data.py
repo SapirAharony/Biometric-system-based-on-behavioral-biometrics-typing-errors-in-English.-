@@ -199,10 +199,10 @@ class OfflineListener:
     def write_to_json_file(self, text):
         """A method that writes input text to json file"""
         for sentence in self.__sentence_tokenizer.tokenize(text):
-            __list_of_words = System_features_extractor.ListOfWords(sentence)
+            __list_of_words = system_features_extractor.ListOfWords(sentence)
             __list_of_words.is_from_file = True
             if __list_of_words.all_words:
-                System_features_extractor.write_object_to_json_file(self.destination_json_file_path, 'Sentences',
-                                                                    System_features_extractor.object_to_dicts(
+                system_features_extractor.write_object_to_json_file(self.destination_json_file_path, 'Sentences',
+                                                                    system_features_extractor.object_to_dicts(
                                                                         __list_of_words))
             __list_of_words.clear_list()

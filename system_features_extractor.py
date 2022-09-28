@@ -29,6 +29,9 @@ class Word:
         self.corrected_word_tag = corrected_word_tag
         if corrected_word is not None:
             self.distance = Distances(self.original_word, self.corrected_word, is_tokenized=True)
+            if not self.distance:
+                delattr(self, 'distance')
+
 
 
 class ListOfWords:
@@ -55,6 +58,9 @@ class ListOfWords:
         else:
             self.corrected_sentence_structure = None
             self.sentence_distances = None
+
+        if hasattr(self, 'distance') and not self.sentence_distances:
+                delattr(self, 'distance')
         i = 0
         for original_word, correct_word in zip(self.sentence_tokenizer.tokenize(self.original_sentence),
                                                self.sentence_tokenizer.tokenize(self.corrected_sentence)):
