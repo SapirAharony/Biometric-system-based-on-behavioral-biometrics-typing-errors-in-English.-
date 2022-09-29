@@ -3,42 +3,61 @@ from autocorrect import Speller
 
 
 class EditOperation:
-    def __init__(self, operation_type: str, idx: int, previous_char: str, next_char: str):
-        self.operation_type = operation_type
+    def __init__(self, operation_type_name: str,operation_type_id: int, idx: int, previous_char: str, next_char: str):
+        self.operation_type_name = operation_type_name
         self.previous_char = previous_char
         self.next_char = next_char
         self.char_idx = idx
+        self.ml_repr = [operation_type_id]
+        if next_char:
+            self.ml_repr.append(ord(next_char))
+        else:
+            self.ml_repr.append(-1)
+        if self.previous_char:
+            self.ml_repr.append(ord(previous_char))
+        else:
+            self.ml_repr.append(-1)
 
-    def __repr__(self):
-        return f'{self.__class__.__name__}: {self.previous_char} {self.next_char} {self.char_idx}'
+    # def __repr__(self):
+    #     return f'{self.__class__.__name__}: {self.previous_char} {self.next_char} {self.char_idx}'
 
 
 class Insert(EditOperation):
     def __init__(self, new_char: str, idx: int, previous_char: str, next_char: str):
         self.inserted_char = new_char
-        super().__init__('Insert', idx, previous_char, next_char)
+        super().__init__(operation_type_name='Insert', operation_type_id=1, idx=idx, previous_char=previous_char, next_char=next_char)
+        self.ml_repr.append(ord(self.inserted_char))
+        self.ml_repr.append(self.char_idx)
 
-    def __repr__(self):
-        return f'{self.__class__.__name__}: {self.inserted_char}({self.char_idx}); prev:{self.previous_char}, next: {self.next_char}'
+    # def __repr__(self):
+    #     return f'{self.__class__.__name__}: {self.inserted_char}({self.char_idx}); prev:{self.previous_char}, next: {self.next_char}'
 
 
 class Delete(EditOperation):
     def __init__(self, deleted_char: str, idx: int, previous_char: str, next_char: str):
         self.deleted_char = deleted_char
-        super().__init__('Delete', idx, previous_char, next_char)
+        super().__init__(operation_type_name='Delete', operation_type_id=2, idx=idx, previous_char=previous_char, next_char=next_char)
+        self.ml_repr.append(ord(self.deleted_char))
+        self.ml_repr.append(self.char_idx)
 
-    def __repr__(self):
-        return f'{self.__class__.__name__}: {self.deleted_char}({self.char_idx}); prev:{self.previous_char}, next: {self.next_char}'
+
+    # def __repr__(self):
+    #     return f'{self.__class__.__name__}: {self.deleted_char}({self.char_idx}); prev:{self.previous_char}, next: {self.next_char}'
 
 
 class Replace(EditOperation):
     def __init__(self, old_char: str, new_char: str, idx: int, previous_char: str, next_char: str):
         self.old_char = old_char
         self.new_char = new_char
-        super().__init__('Replace', idx, previous_char, next_char)
+        super().__init__(operation_type_name='Replace', operation_type_id=3, idx=idx, previous_char=previous_char, next_char=next_char)
+        self.ml_repr.append(ord(self.old_char))
+        self.ml_repr.append(self.char_idx)
+        self.ml_repr.append(ord(self.new_char))
 
-    def __repr__(self):
-        return f'{self.__class__.__name__}: {self.old_char}->{self.new_char}({self.char_idx}); prev:{self.previous_char}, next: {self.next_char}'
+
+
+    # def __repr__(self):
+        # return f'{self.__class__.__name__}: {self.old_char}->{self.new_char}({self.char_idx}); prev:{self.previous_char}, next: {self.next_char}'
 
 
 class Transpose(EditOperation):
@@ -47,10 +66,14 @@ class Transpose(EditOperation):
         self.left_char = left_char
         self.right_char = right_char
         self.idx_right = idx_right
-        super().__init__('Transpose', idx_left, previous_char, next_char)
+        super().__init__(operation_type_name='Transpose', operation_type_id=4, idx=idx_left, previous_char=previous_char, next_char=next_char)
+        self.ml_repr.append(ord(self.left_char))
+        self.ml_repr.append(self.char_idx)
+        self.ml_repr.append(ord(self.right_char))
+        self.ml_repr.append(self.idx_right)
 
-    def __repr__(self):
-        return f'{self.__class__.__name__}: {self.left_char}({self.char_idx}) <-> {self.right_char}({self.idx_right}); prev:{self.previous_char}, next: {self.next_char}'
+    # def __repr__(self):
+    #     return f'{self.__class__.__name__}: {self.left_char}({self.char_idx}) <-> {self.right_char}({self.idx_right}); prev:{self.previous_char}, next: {self.next_char}'
 
 
 def get_damerau_levenshtein_distance_matrix(word_1: str, word_2: str, is_damerau: bool = False):
