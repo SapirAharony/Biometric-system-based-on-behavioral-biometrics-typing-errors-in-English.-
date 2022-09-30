@@ -173,8 +173,8 @@ class OfflineListener:
     """ A class which should be used for 'offline' files. """
     # tokenizer to separate new context (mostly sentences)
     __sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[.;!?\n]', gaps=True)
-    destination_json_file_path = "C:/Users/user/Desktop/destination_file.json"
-    source_txt_file_path = "C:/Users/user/Desktop/destination_file.json"
+    destination_json_file_path = "C:/Users/user/Desktop/offline_destination_file_path.json"
+    source_txt_file_path = "C:/Users/user/Desktop/source_file_path.json"
     file_types = ['txt', 'pdf', 'docx']
 
     def read_text_file(self) -> str:

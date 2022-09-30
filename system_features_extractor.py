@@ -1,4 +1,5 @@
 # spell checker
+import difflib
 import os
 import language_tool_python
 from autocorrect import Speller
@@ -48,37 +49,51 @@ class ListOfWords:
                 self.original_sentence[0].islower() and self.corrected_sentence[0].isupper()):
             self.original_sentence = self.original_sentence[:1].upper() + self.original_sentence[1:]
         self.all_words = []
+        self.correct_words = []
         self.misspelled_words = []
+        tokenized_original_sentence = self.sentence_tokenizer.tokenize(self.original_sentence)
+        tokenized_corrected_sentence = self.sentence_tokenizer.tokenize(self.corrected_sentence)
         # assign corrected_words
-        self.original_sentence_structure = [tag[1] for tag in nltk.pos_tag(
-            self.sentence_tokenizer.tokenize(self.original_sentence))]
-
+        self.original_sentence_structure = [tag[1] for tag in nltk.pos_tag(tokenized_original_sentence)]
         if self.original_sentence != self.corrected_sentence:
-            self.corrected_sentence_structure = [tag[1] for tag in nltk.pos_tag(
-                self.sentence_tokenizer.tokenize(self.corrected_sentence))]
+            self.corrected_sentence_structure = [tag[1] for tag in nltk.pos_tag(tokenized_corrected_sentence)]
             if self.corrected_sentence_structure == self.original_sentence_structure:
                 self.corrected_sentence_structure = None
                 self.sentence_distances = Distances(self.original_sentence, self.corrected_sentence)
         else:
             self.corrected_sentence_structure = None
             self.sentence_distances = None
-
-
         i = 0
-
-        for original_word, correct_word in zip(self.sentence_tokenizer.tokenize(self.original_sentence),
-                                               self.sentence_tokenizer.tokenize(self.corrected_sentence)):
-            tag = self.original_sentence_structure[i]
-            if original_word != correct_word:
-                if self.corrected_sentence_structure is not None:
-                    correct_word_tag = self.corrected_sentence_structure[i]
+        if len(self.original_sentence) == len(self.corrected_sentence):
+            for original_word, correct_word in zip(tokenized_original_sentence, tokenized_original_sentence):
+                tag = self.original_sentence_structure[i]
+                if original_word != correct_word:
+                    if self.corrected_sentence_structure is not None:
+                        correct_word_tag = self.corrected_sentence_structure[i]
+                    else:
+                        correct_word_tag = None
+                    self.all_words.append(Word(original_word, tag, correct_word, correct_word_tag))
+                    self.misspelled_words.append(Word(original_word, tag, correct_word, correct_word_tag))
                 else:
-                    correct_word_tag = None
-                self.all_words.append(Word(original_word, tag, correct_word, correct_word_tag))
-                self.misspelled_words.append(Word(original_word, tag, correct_word, correct_word_tag))
-            else:
-                self.all_words.append(Word(original_word, tag))
-            i += 1
+                    self.all_words.append(Word(original_word, tag))
+                    self.correct_words.append(Word(original_word, tag))
+                i += 1
+        elif len(self.original_sentence) != len(self.corrected_sentence):
+            for original_word in self.original_sentence:
+                tag = self.original_sentence_structure[i]
+                correct_word = str(difflib.get_close_matches(original_word, tokenized_corrected_sentence, n=1)[0])
+                if original_word != correct_word:
+                    if self.corrected_sentence_structure is not None:
+                        correct_word_tag = self.corrected_sentence_structure[self.corrected_sentence.index(correct_word)]
+                    else:
+                        correct_word_tag = None
+                    self.all_words.append(Word(original_word, tag, correct_word, correct_word_tag))
+                    self.misspelled_words.append(Word(original_word, tag, correct_word, correct_word_tag))
+                else:
+                    self.all_words.append(Word(original_word, tag))
+                    self.correct_words.append(Word(original_word, tag))
+                i += 1
+
         self.add_by_left_click = add_by_left_click
         self.is_from_file = is_from_file
 
@@ -89,6 +104,7 @@ class ListOfWords:
         self.add_by_left_click = False
         self.all_words.clear()
         self.misspelled_words.clear()
+        self.correct_words.clear()
         self.original_sentence = None
         self.corrected_sentence = None
         self.is_from_file = None
@@ -162,6 +178,7 @@ def add_simple_dict_to_json_file(path_to_file: str, key: str, dict_obj: dict):
                 data[key] = dict_obj
         json.dump(data, file, indent=4)
         file.close()
+
 
 def add_name_to_json(path_to_file: str, user_name: str):
     # check if is empty

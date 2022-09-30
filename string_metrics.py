@@ -18,7 +18,6 @@ class EditOperation:
         else:
             self.ml_repr.append(-1)
 
-
 class Insert(EditOperation):
     def __init__(self, new_char: str, idx: int, previous_char: str, next_char: str):
         self.inserted_char = new_char
@@ -26,14 +25,12 @@ class Insert(EditOperation):
         self.ml_repr.append(ord(self.inserted_char))
         self.ml_repr.append(self.char_idx)
 
-
 class Delete(EditOperation):
     def __init__(self, deleted_char: str, idx: int, previous_char: str, next_char: str):
         self.deleted_char = deleted_char
         super().__init__(operation_type_name='Delete', operation_type_id=2, idx=idx, previous_char=previous_char, next_char=next_char)
         self.ml_repr.append(ord(self.deleted_char))
         self.ml_repr.append(self.char_idx)
-
 
 class Replace(EditOperation):
     def __init__(self, old_char: str, new_char: str, idx: int, previous_char: str, next_char: str):
@@ -43,7 +40,6 @@ class Replace(EditOperation):
         self.ml_repr.append(ord(self.old_char))
         self.ml_repr.append(self.char_idx)
         self.ml_repr.append(ord(self.new_char))
-
 
 class Transpose(EditOperation):
     def __init__(self, left_char: str, right_char: str, idx_left: int, idx_right: int, previous_char: str,
@@ -56,7 +52,6 @@ class Transpose(EditOperation):
         self.ml_repr.append(self.char_idx)
         self.ml_repr.append(ord(self.right_char))
         self.ml_repr.append(self.idx_right)
-
 
 def get_damerau_levenshtein_distance_matrix(word_1: str, word_2: str, is_damerau: bool = False):
     distance_matrix = [[0 for _ in range(len(word_2) + 1)] for _ in range(len(word_1) + 1)]
@@ -78,7 +73,6 @@ def get_damerau_levenshtein_distance_matrix(word_1: str, word_2: str, is_damerau
                     distance_matrix[i + 1][j + 1] = min(distance_matrix[i + 1][j + 1],
                                                         distance_matrix[i - 1][j - 1] + cost)  # transpose
     return distance_matrix
-
 
 def get_string_oprations(word_1, word_2, is_damerau=True):
     dist_matrix = get_damerau_levenshtein_distance_matrix(word_1, word_2, is_damerau=is_damerau)
@@ -108,7 +102,6 @@ def get_string_oprations(word_1, word_2, is_damerau=True):
             operations_list.insert(0, ('delete', i - 1, i - 1))
             i -= 1
     return operations_list
-
 
 class Distances:
     lev_thresholds = {'short_word': (4, 0.3), 'longer_words': (5, 0.6)}
