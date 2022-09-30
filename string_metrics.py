@@ -18,9 +18,6 @@ class EditOperation:
         else:
             self.ml_repr.append(-1)
 
-    # def __repr__(self):
-    #     return f'{self.__class__.__name__}: {self.previous_char} {self.next_char} {self.char_idx}'
-
 
 class Insert(EditOperation):
     def __init__(self, new_char: str, idx: int, previous_char: str, next_char: str):
@@ -28,9 +25,6 @@ class Insert(EditOperation):
         super().__init__(operation_type_name='Insert', operation_type_id=1, idx=idx, previous_char=previous_char, next_char=next_char)
         self.ml_repr.append(ord(self.inserted_char))
         self.ml_repr.append(self.char_idx)
-
-    # def __repr__(self):
-    #     return f'{self.__class__.__name__}: {self.inserted_char}({self.char_idx}); prev:{self.previous_char}, next: {self.next_char}'
 
 
 class Delete(EditOperation):
@@ -41,10 +35,6 @@ class Delete(EditOperation):
         self.ml_repr.append(self.char_idx)
 
 
-    # def __repr__(self):
-    #     return f'{self.__class__.__name__}: {self.deleted_char}({self.char_idx}); prev:{self.previous_char}, next: {self.next_char}'
-
-
 class Replace(EditOperation):
     def __init__(self, old_char: str, new_char: str, idx: int, previous_char: str, next_char: str):
         self.old_char = old_char
@@ -53,11 +43,6 @@ class Replace(EditOperation):
         self.ml_repr.append(ord(self.old_char))
         self.ml_repr.append(self.char_idx)
         self.ml_repr.append(ord(self.new_char))
-
-
-
-    # def __repr__(self):
-        # return f'{self.__class__.__name__}: {self.old_char}->{self.new_char}({self.char_idx}); prev:{self.previous_char}, next: {self.next_char}'
 
 
 class Transpose(EditOperation):
@@ -71,9 +56,6 @@ class Transpose(EditOperation):
         self.ml_repr.append(self.char_idx)
         self.ml_repr.append(ord(self.right_char))
         self.ml_repr.append(self.idx_right)
-
-    # def __repr__(self):
-    #     return f'{self.__class__.__name__}: {self.left_char}({self.char_idx}) <-> {self.right_char}({self.idx_right}); prev:{self.previous_char}, next: {self.next_char}'
 
 
 def get_damerau_levenshtein_distance_matrix(word_1: str, word_2: str, is_damerau: bool = False):
@@ -129,10 +111,14 @@ def get_string_oprations(word_1, word_2, is_damerau=True):
 
 
 class Distances:
-    lev_treshold = 0.65
+    lev_thresholds = {'short_word': (4, 0.3), 'longer_words': (5, 0.6)}
 
     def __init__(self, str_1, str_2, use_treshold: bool = True, is_tokenized: bool = False):
-        if use_treshold and textdistance.levenshtein.normalized_similarity(str_1, str_2) >= self.lev_treshold:
+        # check condtitions to calculate Distances (thresholds for shorts and longer words)
+        if use_treshold and (((((len(str_1)) <= self.lev_thresholds['short_word'][0] or len(str_2)) <= self.lev_thresholds['short_word'][0]) and
+                              textdistance.damerau_levenshtein.normalized_similarity(str_1, str_2) >= self.lev_thresholds['short_word'][1]) or
+                             ((len(str_1)) >= self.lev_thresholds['longer_words'][0] and
+                              textdistance.damerau_levenshtein.normalized_similarity(str_1, str_2) >= self.lev_thresholds['longer_words'][1])):
             self.__word_1 = str_1
             self.__word_2 = str_2
             self.operations = []

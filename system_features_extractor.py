@@ -29,7 +29,7 @@ class Word:
         self.corrected_word_tag = corrected_word_tag
         if corrected_word is not None:
             self.distance = Distances(self.original_word, self.corrected_word, is_tokenized=True)
-            if not self.distance:
+            if not self.distance.__dict__:
                 delattr(self, 'distance')
 
 
@@ -40,15 +40,19 @@ class ListOfWords:
     __sentence_reg_pattern = r'^([ \W_]*[^A-z])'
 
     def __init__(self, sentence: str, add_by_left_click: bool = False, is_from_file: bool = False):
+        # assign sentence without punctuation
         self.original_sentence = re.sub(self.__sentence_reg_pattern, '', sentence)
         self.corrected_sentence = correct_language_tool(self.original_sentence)
+        # capitalize sentence (due to specificity of the language_tool)
         if self.original_sentence and (
                 self.original_sentence[0].islower() and self.corrected_sentence[0].isupper()):
             self.original_sentence = self.original_sentence[:1].upper() + self.original_sentence[1:]
         self.all_words = []
         self.misspelled_words = []
+        # assign corrected_words
         self.original_sentence_structure = [tag[1] for tag in nltk.pos_tag(
             self.sentence_tokenizer.tokenize(self.original_sentence))]
+
         if self.original_sentence != self.corrected_sentence:
             self.corrected_sentence_structure = [tag[1] for tag in nltk.pos_tag(
                 self.sentence_tokenizer.tokenize(self.corrected_sentence))]
@@ -59,9 +63,9 @@ class ListOfWords:
             self.corrected_sentence_structure = None
             self.sentence_distances = None
 
-        if hasattr(self, 'distance') and not self.sentence_distances:
-                delattr(self, 'distance')
+
         i = 0
+
         for original_word, correct_word in zip(self.sentence_tokenizer.tokenize(self.original_sentence),
                                                self.sentence_tokenizer.tokenize(self.corrected_sentence)):
             tag = self.original_sentence_structure[i]
