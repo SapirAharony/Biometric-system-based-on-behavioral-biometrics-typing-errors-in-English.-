@@ -20,7 +20,6 @@ def correct_language_tool(sentence: str) -> str:
     return language_tool.correct(sentence)
 
 
-
 class Word:
     """ A class which includes words, which are separated by NEXT_WORD_KEYS"""
     def __init__(self, word: str, pos_tag: str, corrected_word: str = None, corrected_word_tag: str = None):
@@ -32,7 +31,6 @@ class Word:
             self.distance = Distances(self.original_word, self.corrected_word, is_tokenized=True)
             if not self.distance.__dict__:
                 delattr(self, 'distance')
-
 
 
 class ListOfWords:
@@ -64,36 +62,42 @@ class ListOfWords:
             self.corrected_sentence_structure = None
             self.sentence_distances = None
         i = 0
-        if len(self.original_sentence) == len(self.corrected_sentence):
-            for original_word, correct_word in zip(tokenized_original_sentence, tokenized_original_sentence):
+        if len(tokenized_original_sentence) == len(tokenized_corrected_sentence):
+            for original_word, correct_word in zip(tokenized_original_sentence, tokenized_corrected_sentence):
                 tag = self.original_sentence_structure[i]
                 if original_word != correct_word:
                     if self.corrected_sentence_structure is not None:
                         correct_word_tag = self.corrected_sentence_structure[i]
                     else:
-                        correct_word_tag = None
+                        correct_word_tag = tag
                     self.all_words.append(Word(original_word, tag, correct_word, correct_word_tag))
                     self.misspelled_words.append(Word(original_word, tag, correct_word, correct_word_tag))
                 else:
                     self.all_words.append(Word(original_word, tag))
                     self.correct_words.append(Word(original_word, tag))
                 i += 1
-        elif len(self.original_sentence) != len(self.corrected_sentence):
-            for original_word in self.original_sentence:
+        else:
+            for original_word in tokenized_original_sentence:
                 tag = self.original_sentence_structure[i]
-                correct_word = str(difflib.get_close_matches(original_word, tokenized_corrected_sentence, n=1)[0])
-                if original_word != correct_word:
-                    if self.corrected_sentence_structure is not None:
-                        correct_word_tag = self.corrected_sentence_structure[self.corrected_sentence.index(correct_word)]
+                if tokenized_corrected_sentence:
+                    correct_word = difflib.get_close_matches(original_word, tokenized_corrected_sentence, n=1)
+                    if correct_word:
+                        correct_word = str(correct_word[0])
                     else:
-                        correct_word_tag = None
+                        correct_word = None
+                else:
+                    correct_word = None
+                if original_word != correct_word:
+                    if self.corrected_sentence_structure is not None and correct_word:
+                        correct_word_tag = self.corrected_sentence_structure[tokenized_corrected_sentence.index(correct_word)]
+                    else:
+                        correct_word_tag = tag
                     self.all_words.append(Word(original_word, tag, correct_word, correct_word_tag))
                     self.misspelled_words.append(Word(original_word, tag, correct_word, correct_word_tag))
                 else:
                     self.all_words.append(Word(original_word, tag))
                     self.correct_words.append(Word(original_word, tag))
                 i += 1
-
         self.add_by_left_click = add_by_left_click
         self.is_from_file = is_from_file
 
