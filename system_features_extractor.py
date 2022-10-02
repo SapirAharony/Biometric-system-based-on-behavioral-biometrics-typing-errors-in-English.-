@@ -49,12 +49,12 @@ class ListOfWords:
         self.all_words = []
         self.correct_words = []
         self.misspelled_words = []
-        tokenized_original_sentence = self.sentence_tokenizer.tokenize(self.original_sentence)
-        tokenized_corrected_sentence = self.sentence_tokenizer.tokenize(self.corrected_sentence)
+        self.tokenized_original_sentence = self.sentence_tokenizer.tokenize(self.original_sentence)
+        self.tokenized_corrected_sentence = self.sentence_tokenizer.tokenize(self.corrected_sentence)
         # assign corrected_words
-        self.original_sentence_structure = [tag[1] for tag in nltk.pos_tag(tokenized_original_sentence)]
+        self.original_sentence_structure = [tag[1] for tag in nltk.pos_tag(self.tokenized_original_sentence)]
         if self.original_sentence != self.corrected_sentence:
-            self.corrected_sentence_structure = [tag[1] for tag in nltk.pos_tag(tokenized_corrected_sentence)]
+            self.corrected_sentence_structure = [tag[1] for tag in nltk.pos_tag(self.tokenized_corrected_sentence)]
             if self.corrected_sentence_structure == self.original_sentence_structure:
                 self.corrected_sentence_structure = None
                 self.sentence_distances = Distances(self.original_sentence, self.corrected_sentence)
@@ -62,8 +62,8 @@ class ListOfWords:
             self.corrected_sentence_structure = None
             self.sentence_distances = None
         i = 0
-        if len(tokenized_original_sentence) == len(tokenized_corrected_sentence):
-            for original_word, correct_word in zip(tokenized_original_sentence, tokenized_corrected_sentence):
+        if len(self.tokenized_original_sentence) == len(self.tokenized_corrected_sentence):
+            for original_word, correct_word in zip(self.tokenized_original_sentence, self.tokenized_corrected_sentence):
                 tag = self.original_sentence_structure[i]
                 if original_word != correct_word:
                     if self.corrected_sentence_structure is not None:
@@ -77,10 +77,10 @@ class ListOfWords:
                     self.correct_words.append(Word(original_word, tag))
                 i += 1
         else:
-            for original_word in tokenized_original_sentence:
+            for original_word in self.tokenized_original_sentence:
                 tag = self.original_sentence_structure[i]
-                if tokenized_corrected_sentence:
-                    correct_word = difflib.get_close_matches(original_word, tokenized_corrected_sentence, n=1)
+                if self.tokenized_corrected_sentence:
+                    correct_word = difflib.get_close_matches(original_word, self.tokenized_corrected_sentence, n=1)
                     if correct_word:
                         correct_word = str(correct_word[0])
                     else:
@@ -89,7 +89,7 @@ class ListOfWords:
                     correct_word = None
                 if original_word != correct_word:
                     if self.corrected_sentence_structure is not None and correct_word:
-                        correct_word_tag = self.corrected_sentence_structure[tokenized_corrected_sentence.index(correct_word)]
+                        correct_word_tag = self.corrected_sentence_structure[self.tokenized_corrected_sentence.index(correct_word)]
                     else:
                         correct_word_tag = tag
                     self.all_words.append(Word(original_word, tag, correct_word, correct_word_tag))
@@ -184,7 +184,7 @@ def add_simple_dict_to_json_file(path_to_file: str, key: str, dict_obj: dict):
         file.close()
 
 
-def add_name_to_json(path_to_file: str, user_name: str):
+def add_str_to_json(path_to_file: str, user_name: str):
     # check if is empty
     if os.path.isfile(path_to_file) and os.path.getsize(path_to_file) > 0:
         data = read_json_file(path_to_file)
@@ -218,7 +218,7 @@ def extract_data(source_file_path, dest_file_path, user_name: str):
             list_of_words = ListOfWords(sentence['original_sentence'], sentence['add_by_left_click'],
                                         sentence['is_from_file'])
             write_object_to_json_file(dest_file_path, 'Sentence', object_to_dicts(list_of_words))
-    add_name_to_json(dest_file_path, user_name)
+    add_str_to_json(dest_file_path, user_name)
     if 'Keys' in keys:
         add_simple_dict_to_json_file(dest_file_path, 'Keys', read_json_file(source_file_path)['Keys'])
     if 'No printable keys' in keys:
