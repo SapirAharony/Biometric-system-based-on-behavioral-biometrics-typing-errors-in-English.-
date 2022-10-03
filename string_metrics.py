@@ -3,6 +3,7 @@ from autocorrect import Speller
 
 
 class EditOperation:
+    ml_repr_size = 7
     def __init__(self, operation_type_name: str,operation_type_id: int, idx: int, previous_char: str, next_char: str):
         self.operation_type_name = operation_type_name
         self.previous_char = previous_char
@@ -24,6 +25,8 @@ class Insert(EditOperation):
         super().__init__(operation_type_name='Insert', operation_type_id=1, idx=idx, previous_char=previous_char, next_char=next_char)
         self.ml_repr.append(ord(self.inserted_char))
         self.ml_repr.append(self.char_idx)
+        for _ in range(abs(len(self.ml_repr)-self.ml_repr_size)):
+            self.ml_repr.append(self.ml_repr[0])
 
 class Delete(EditOperation):
     def __init__(self, deleted_char: str, idx: int, previous_char: str, next_char: str):
@@ -31,6 +34,8 @@ class Delete(EditOperation):
         super().__init__(operation_type_name='Delete', operation_type_id=2, idx=idx, previous_char=previous_char, next_char=next_char)
         self.ml_repr.append(ord(self.deleted_char))
         self.ml_repr.append(self.char_idx)
+        for _ in range(abs(len(self.ml_repr)-self.ml_repr_size)):
+            self.ml_repr.append(self.ml_repr[0])
 
 class Replace(EditOperation):
     def __init__(self, old_char: str, new_char: str, idx: int, previous_char: str, next_char: str):
@@ -40,6 +45,8 @@ class Replace(EditOperation):
         self.ml_repr.append(ord(self.old_char))
         self.ml_repr.append(self.char_idx)
         self.ml_repr.append(ord(self.new_char))
+        for _ in range(abs(len(self.ml_repr)-self.ml_repr_size)):
+            self.ml_repr.append(self.ml_repr[0])
 
 class Transpose(EditOperation):
     def __init__(self, left_char: str, right_char: str, idx_left: int, idx_right: int, previous_char: str,
@@ -52,6 +59,8 @@ class Transpose(EditOperation):
         self.ml_repr.append(self.char_idx)
         self.ml_repr.append(ord(self.right_char))
         self.ml_repr.append(self.idx_right)
+        for _ in range(abs(len(self.ml_repr)-self.ml_repr_size)):
+            self.ml_repr.append(self.ml_repr[0])
 
 def get_damerau_levenshtein_distance_matrix(word_1: str, word_2: str, is_damerau: bool = False):
     distance_matrix = [[0 for _ in range(len(word_2) + 1)] for _ in range(len(word_1) + 1)]

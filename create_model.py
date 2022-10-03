@@ -1,6 +1,7 @@
 import os, pandas, json, nltk
-import numpy
-from sklearn import preprocessing
+import numpy as np
+from sklearn import svm, metrics
+from sklearn.model_selection import train_test_split
 from gensim.models import Word2Vec
 from sklearn.preprocessing import normalize
 import pandas as pd
@@ -28,17 +29,25 @@ def get_correct_words_from_json(file_path: str, labeled: bool = False):
     return words
 
 
+user_names = {}
+
 def get_misspelled_words_df_from_json(file_path: str, labeled: bool = False):
+    global user_names
     misspelled = pd.DataFrame()
     for dictionary in read_json_file(file_path)['Sentence']:
         if 'misspelled_words' in dictionary.keys() and dictionary['misspelled_words']:
             for k in dictionary['misspelled_words']:
                 if 'distance' in k.keys() and k['distance']['operations']:
-                    k['distance']['operations'] = numpy.array(k['distance']['operations'][0]['ml_repr'])
+                    k['distance']['operations'] = k['distance']['operations'][0]['ml_repr']
                 misspelled = pd.concat([misspelled, pd.json_normalize(k)], ignore_index=True)
     if labeled:
-        misspelled['label'] = [read_json_file(file_path)['Name'] for _ in range(misspelled.shape[0])]
-
+        name = read_json_file(file_path)['Name']
+        if not user_names:
+            user_names[name] = 0
+        else:
+            if name not in user_names.keys():
+                user_names[name] = max(user_names.values()) + 1
+        misspelled['label'] = [user_names[name] for _ in range(misspelled.shape[0])]
     return misspelled
 
 
@@ -63,10 +72,10 @@ def get_tokenized_sentences(file_path: str, is_merged: bool = False):
 
 
 # join data from files
-data = pd.DataFrame()
+df = pd.DataFrame()
 for file in os.listdir(directory):
-    data = pd.concat([data, get_misspelled_words_df_from_json(directory + '\\' + file, labeled=True)],
-                     ignore_index=True)
+    df = pd.concat([df, get_misspelled_words_df_from_json(directory + '\\' + file, labeled=True)],
+                   ignore_index=True)
 
 
 is_merged = False
@@ -86,8 +95,17 @@ else:
     original_word_word2vec = Word2Vec([original_tokenized_senteces], min_count=1)
     corrected_word_word2vec = Word2Vec([corrected_tokenized_senteces], min_count=1)
 
+# clear data
 
-# not merged
+
+df = df.dropna().reset_index()
+del df['index']
+
+
+if 'label' in df.columns.tolist():
+    y = df['label'].to_numpy()
+    del df['label']
+
 
 # define interesting metrics
 cols = ['original_word', 'pos_tag', 'corrected_word', 'corrected_word_tag', 'distance.operations',
@@ -99,28 +117,60 @@ cols = ['original_word', 'pos_tag', 'corrected_word', 'corrected_word_tag', 'dis
         'distance.mra_ns',
         # seq based
         'distance.lcsstr']
-
-data = data[cols]
+df = df[cols]
 # drop rows with None values
 
-data = data.dropna().reset_index()
+
+
 
 pos_tag_word2vec = Word2Vec(pos_tags, min_count=1)
 
-
-
 # vectorize pos_tags
-if 'corrected_word_tag' in data.columns.tolist():
-    data['corrected_word_tag'].apply(lambda x: pos_tag_word2vec.wv.get_vector(x, norm=True))
+if 'corrected_word_tag' in df.columns.tolist():
+    df['corrected_word_tag'] = df['corrected_word_tag'].apply(lambda x: pos_tag_word2vec.wv.get_vector(x, norm=True))
 
-if 'pos_tag' in data.columns.tolist():
-    data['pos_tag'] = data['pos_tag'].apply(lambda x: pos_tag_word2vec.wv.get_vector(x, norm=True))
+if 'pos_tag' in df.columns.tolist():
+    df['pos_tag'] = df['pos_tag'].apply(lambda x: pos_tag_word2vec.wv.get_vector(x, norm=True))
 
 # vectorize words
-if 'original_word' in data.columns.tolist():
-    data['original_word'] = data['original_word'].apply(lambda x: original_word_word2vec.wv.get_vector(x, norm=True))
+if 'original_word' in df.columns.tolist():
+    df['original_word'] = df['original_word'].apply(lambda x: original_word_word2vec.wv.get_vector(x, norm=True))
 
-if 'corrected_word' in data.columns.tolist():
-    data['corrected_word'] = data['corrected_word'].apply(lambda x: corrected_word_word2vec.wv.get_vector(x, norm=True))
+if 'corrected_word' in df.columns.tolist():
+    df['corrected_word'] = df['corrected_word'].apply(lambda x: corrected_word_word2vec.wv.get_vector(x, norm=True))
 
-print(data[['original_word', 'pos_tag']])
+
+# split it to features
+X = df.to_numpy()
+print(X.shape)
+p, m = 0,0
+for k in X:
+    for i in k:
+        if not isinstance(i, float):
+
+            if len(i) == 0:
+                print(m, ".", p, ".", type(i))
+                p += 1
+    m+=1
+
+
+
+'''
+# print(X)
+# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
+
+svm = svm.SVC()
+svm.fit(X_train, y_train)
+
+prediction = svm.predict(X_test)
+acc = metrics.accuracy_score(y_test, prediction)
+print("predictions: ", prediction)
+print("accuracy: ", acc)
+'''
+
+
+
+
