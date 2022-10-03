@@ -145,6 +145,7 @@
 #       textdistance.monge_elkan(first_string_tokenized, second_string_tokenized))
 # print('bag: ', textdistance.bag(first_string, second_string),
 #       textdistance.bag(first_string_tokenized, second_string_tokenized))
+
 import textdistance, difflib
 
 import system_features_extractor
@@ -159,33 +160,6 @@ def unique_values(lista: list):
     return tmp
 
 
-# print(textdistance.ratcliff_obershelp('bartek', 'bratek'))
-# print(textdistance.ratcliff_obershelp('test bartek', 'bartek test'))
-# print(textdistance.ratcliff_obershelp('bartek', 'Bartek'))
-# print(textdistance.lcsseq('bartek', 'bratek'))
-# print(textdistance.lcsseq('test bartek', 'bartek test'))
-# print(textdistance.sorensen_dice('bartek a lo', 'batek'))
-# print(textdistance.sorensen_dice('bartek', 'Bartek'))
-# print(textdistance.jaccard('bartek', 'batek'))
-# print(textdistance.jaccard('bartek', 'Bartek'))
-# word_1, word_2 = 'bartek', 'brtek'
-# operations = System_features_extractor.get_string_oprations(word_1, word_2)
-#
-# word_1, word_2 = 'bartek', 'bratek'
-# operations = System_features_extractor.get_string_oprations(word_1, word_2)
-#
-#
-# word_1, word_2 = 'brtek', 'bartek'
-# operations = System_features_extractor.get_string_oprations(word_1, word_2)
-
-
-# words = [('rarrer', 'bartek'),
-#          ('kolo', 'olo'),
-#          ('oklo', 'kolo'),
-#          ('olo', 'kolo'),
-#          ('wolo', 'kolo')
-#          ]
-# print(string_comparison_metrics.Distances('olo', 'kolow'))
 
 ops = []
 
@@ -194,31 +168,63 @@ ops = []
 # print(System_features_extractor.read_json_file('karola_dest.json')['Sentence'][3])
 
 from system_features_extractor import ListOfWords
-import os
+import os,system_features_extractor
 
-def extract_data(source_file_path, dest_file_path):
-    keys = System_features_extractor.read_json_file(source_file_path).keys()
-    print(keys)
-    sentences = System_features_extractor.read_json_file(source_file_path)['Sentence']
-    for sentence in sentences:
-        if sentence is not None and isinstance(sentence['original_sentence'], str):
-            list_of_words = ListOfWords(sentence['original_sentence'], sentence['add_by_left_click'],
-                                        sentence['is_from_file'])
-            System_features_extractor.write_object_to_json_file(dest_file_path, 'Sentence',
-                                                                System_features_extractor.object_to_dicts(list_of_words))
-    if 'Keys' in keys:
-        System_features_extractor.add_simple_dict_to_json_file(dest_file_path, 'Keys', System_features_extractor.read_json_file(source_file_path)['Keys'])
-    if 'No printable keys' in keys:
-        System_features_extractor.add_simple_dict_to_json_file(dest_file_path, 'No printable keys',
-                                                                   System_features_extractor.read_json_file(source_file_path)['No printable keys'])
-    if 'Pressed keys' in keys:
-        System_features_extractor.add_list_to_json_file(dest_file_path, 'Pressed keys',
-                                                            System_features_extractor.read_json_file(source_file_path)['Pressed keys'])
-    if 'Digraphs' in keys:
-        System_features_extractor.add_list_to_json_file(dest_file_path, 'Digraphs', System_features_extractor.read_json_file(source_file_path)['Digraphs'])
+# def extract_data(source_file_path, dest_file_path):
+#     keys = system_features_extractor.read_json_file(source_file_path).keys()
+#     print(keys)
+#     sentences = system_features_extractor.read_json_file(source_file_path)['Sentence']
+#     for sentence in sentences:
+#         if sentence is not None and isinstance(sentence['original_sentence'], str):
+#             list_of_words = ListOfWords(sentence['original_sentence'], sentence['add_by_left_click'],
+#                                         sentence['is_from_file'])
+#             system_features_extractor.write_object_to_json_file(dest_file_path, 'Sentence',
+#                                                                 system_features_extractor.object_to_dicts(list_of_words))
+#     if 'Keys' in keys:
+#         system_features_extractor.add_simple_dict_to_json_file(dest_file_path, 'Keys', system_features_extractor.read_json_file(source_file_path)['Keys'])
+#     if 'No printable keys' in keys:
+#         system_features_extractor.add_simple_dict_to_json_file(dest_file_path, 'No printable keys',
+#                                                                    system_features_extractor.read_json_file(source_file_path)['No printable keys'])
+#     if 'Pressed keys' in keys:
+#         system_features_extractor.add_list_to_json_file(dest_file_path, 'Pressed keys',
+#                                                             system_features_extractor.read_json_file(source_file_path)['Pressed keys'])
+#     if 'Digraphs' in keys:
+#         system_features_extractor.add_list_to_json_file(dest_file_path, 'Digraphs', system_features_extractor.read_json_file(source_file_path)['Digraphs'])
 
-directory = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files'
-# for file in os.listdir(directory):
-#     print(file, end=' ')
-#     extract_data(directory + '\\' + file, directory + '\\done_' + file)
+
+tuples = [('test', 'test'), ('my', 'my'),('rollout', 'rollout'),('piece', 'piece'),('understood', 'understood'), ('oooo', 'oooo'),('hohoh', 'haha')]
+for k in tuples:
+    print(system_features_extractor.Distances(k[0], k[1], is_tokenized=True).__dict__)
+for k in tuples:
+    print(system_features_extractor.Distances(k[0], k[1]).__dict__)
+
+################################## exctract data from original files
+
+
+source_file_dir = 'C:\\Users\\user\\Desktop\\inz_wyniki'
+dest_file_dir = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files'
+for file in os.listdir(source_file_dir):
+    if file[-4:] == 'json':
+        print(file, end=' ')
+        system_features_extractor.extract_data(source_file_dir + '\\' + file, dest_file_dir + '\\done_' + file, file[:-5].capitalize())
+
+text = 'Appare ntly it\'s kept checking up on her feeding her and so on.'
+print(system_features_extractor.ListOfWords(text).__dict__)
+print(system_features_extractor.ListOfWords(text).__dict__['original_sentence_structure'])
+print(system_features_extractor.ListOfWords(text).__dict__['corrected_sentence_structure'])
+
+text = 'Apparentlyit\'s kept checking up on her feeding her and so on.'
+print(system_features_extractor.ListOfWords(text).__dict__)
+print(system_features_extractor.ListOfWords(text).__dict__['original_sentence_structure'])
+print(system_features_extractor.ListOfWords(text).__dict__)
+
+#
+# word = 'test'
+# list_of_words = ['text', 'tst', 'polak', 'lkocha']
+# print(difflib.get_close_matches(word, list_of_words, n=1)[0])
+#
+# print(system_features_extractor.Word('aa','','b').__dict__)
+# print(string_metrics.Distances('aa','ba'))
+
+
 

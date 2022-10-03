@@ -53,9 +53,9 @@ def get_tokenized_sentences(file_path: str, is_merged: bool = False):
     original_sentences = []
     for dictionary in read_json_file(file_path)['Sentence']:
         if 'tokenized_corrected_sentence' in dictionary.keys() and dictionary['tokenized_corrected_sentence']:
-            corrected_sentences.append(dictionary['tokenized_corrected_sentence'])
+            corrected_sentences = corrected_sentences + dictionary['tokenized_corrected_sentence']
         if 'tokenized_original_sentence' in dictionary.keys() and dictionary['tokenized_original_sentence']:
-            original_sentences.append(dictionary['tokenized_original_sentence'])
+            original_sentences = original_sentences + dictionary['tokenized_original_sentence']
     if is_merged:
         return original_sentences + corrected_sentences
     else:
@@ -68,9 +68,26 @@ for file in os.listdir(directory):
     data = pd.concat([data, get_misspelled_words_df_from_json(directory + '\\' + file, labeled=True)],
                      ignore_index=True)
 
-print(get_tokenized_sentences(file_pth, is_merged=True))
 
-print(data.info())
+is_merged = False
+# merged
+if is_merged:
+    merged_tokenized_senteces = []
+    for file in os.listdir(directory):
+        merged_tokenized_senteces = merged_tokenized_senteces + get_tokenized_sentences(file, is_merged=True)
+
+    original_word_word2vec = corrected_word_word2vec = Word2Vec([merged_tokenized_senteces], min_count=1)
+
+else:
+    original_tokenized_senteces, corrected_tokenized_senteces = [], []
+    for file in os.listdir(directory):
+        original_tokenized_senteces = original_tokenized_senteces + get_tokenized_sentences(directory+file, is_merged=False)[0]
+        corrected_tokenized_senteces = corrected_tokenized_senteces + get_tokenized_sentences(directory+file, is_merged=False)[1]
+    original_word_word2vec = Word2Vec([original_tokenized_senteces], min_count=1)
+    corrected_word_word2vec = Word2Vec([corrected_tokenized_senteces], min_count=1)
+
+
+# not merged
 
 # define interesting metrics
 cols = ['original_word', 'pos_tag', 'corrected_word', 'corrected_word_tag', 'distance.operations',
@@ -90,15 +107,7 @@ data = data.dropna().reset_index()
 
 pos_tag_word2vec = Word2Vec(pos_tags, min_count=1)
 
-# merged
-original_word_word2vec = corrected_word_word2vec = Word2Vec(get_tokenized_sentences(file_pth, is_merged=True),
-                                                            min_count=1)
-print(original_word_word2vec)
-print(corrected_word_word2vec)
 
-# not merged
-original_word_word2vec = Word2Vec(get_tokenized_sentences(file_pth)[0], min_count=1)
-corrected_word_word2vec = Word2Vec(get_tokenized_sentences(file_pth)[1], min_count=1)
 
 # vectorize pos_tags
 if 'corrected_word_tag' in data.columns.tolist():
@@ -114,4 +123,4 @@ if 'original_word' in data.columns.tolist():
 if 'corrected_word' in data.columns.tolist():
     data['corrected_word'] = data['corrected_word'].apply(lambda x: corrected_word_word2vec.wv.get_vector(x, norm=True))
 
-# print(data[['original_word', 'pos_tag']])
+print(data[['original_word', 'pos_tag']])
