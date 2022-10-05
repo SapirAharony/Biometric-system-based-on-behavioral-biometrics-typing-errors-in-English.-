@@ -17,9 +17,21 @@ def read_json_file(path_to_file):
 directory = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files\\'
 file_pth = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files\\done_miki.json'
 
+# data = read_json_file(file_pth)['Sentence']
+# for list_of_words in data:
+#     if list_of_words and 'misspelled_words' in list_of_words.keys() and list_of_words['misspelled_words']:
+#         for k in list_of_words['misspelled_words']:
+#             if 'distance' in k.keys() and k['distance']['operations']:
+#                 print(k)
+#                 print(k['distance']['operations'][0]['ml_repr'])
+#                 k['distance']['operations'] = k['distance']['operations'][0]['ml_repr']
+
+
+
 
 def get_correct_words_from_json(file_path: str, labeled: bool = False):
     words = pd.DataFrame()
+
     for dictionary in read_json_file(file_path)['Sentence']:
         for word in dictionary['all_words']:
             if word['corrected_word'] is None:
@@ -35,10 +47,10 @@ def get_misspelled_words_df_from_json(file_path: str, labeled: bool = False):
     global user_names
     misspelled = pd.DataFrame()
     for dictionary in read_json_file(file_path)['Sentence']:
-        if 'misspelled_words' in dictionary.keys() and dictionary['misspelled_words']:
+        if 'misspelled_words' in dictionary.keys() and len(dictionary['misspelled_words']) > 0:
             for k in dictionary['misspelled_words']:
                 if 'distance' in k.keys() and k['distance']['operations']:
-                    k['distance']['operations'] = k['distance']['operations'][0]['ml_repr']
+                    k['distance']['operations'] = np.array(k['distance']['operations'][0]['ml_repr'])
                 misspelled = pd.concat([misspelled, pd.json_normalize(k)], ignore_index=True)
     if labeled:
         name = read_json_file(file_path)['Name']
@@ -96,8 +108,6 @@ else:
     corrected_word_word2vec = Word2Vec([corrected_tokenized_senteces], min_count=1)
 
 # clear data
-
-
 df = df.dropna().reset_index()
 del df['index']
 
@@ -108,20 +118,32 @@ if 'label' in df.columns.tolist():
 
 
 # define interesting metrics
-cols = ['original_word', 'pos_tag', 'corrected_word', 'corrected_word_tag', 'distance.operations',
+cols = [
+        # 'original_word',
+        # 'pos_tag',
+        # 'corrected_word',
+        # 'corrected_word_tag',
+        'distance.operations',
         # edit ops
-        'distance.damerau_levenshtein_distance', 'distance.jaro_winkler_ns',
+        'distance.damerau_levenshtein_distance',
+        'distance.jaro_winkler_ns',
         # token based
-        'distance.gestalt_ns', 'distance.sorensen_dice_ns', 'distance.cosine_ns', 'distance.overlap',
+        'distance.gestalt_ns',
+        'distance.sorensen_dice_ns',
+        'distance.cosine_ns',
+        'distance.overlap',
         # phonetic
         'distance.mra_ns',
         # seq based
         'distance.lcsstr']
-df = df[cols]
+
+float_vals = ['distance.damerau_levenshtein_distance', 'distance.jaro_winkler_ns', 'distance.gestalt_ns',
+          'distance.sorensen_dice_ns', 'distance.cosine_ns', 'distance.overlap', 'distance.mra_ns', 'distance.lcsstr']
+
+
+df = df.loc[:, cols]
 # drop rows with None values
-
-
-
+df = df.dropna()
 
 pos_tag_word2vec = Word2Vec(pos_tags, min_count=1)
 
@@ -139,26 +161,19 @@ if 'original_word' in df.columns.tolist():
 if 'corrected_word' in df.columns.tolist():
     df['corrected_word'] = df['corrected_word'].apply(lambda x: corrected_word_word2vec.wv.get_vector(x, norm=True))
 
-
 # split it to features
+
 X = df.to_numpy()
+
+
 print(X.shape)
-p, m = 0,0
-for k in X:
-    for i in k:
-        if not isinstance(i, float):
+print(y.shape)
 
-            if len(i) == 0:
-                print(m, ".", p, ".", type(i))
-                p += 1
-    m+=1
+print(X[0])
 
 
-
-'''
-# print(X)
-# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=40)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
 
 print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
 
@@ -169,8 +184,4 @@ prediction = svm.predict(X_test)
 acc = metrics.accuracy_score(y_test, prediction)
 print("predictions: ", prediction)
 print("accuracy: ", acc)
-'''
-
-
-
 

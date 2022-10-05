@@ -211,7 +211,6 @@ def add_list_to_json_file(path_to_file: str, key: str, list_obj: list):
 
 def extract_data(source_file_path, dest_file_path, user_name: str):
     keys = read_json_file(source_file_path).keys()
-    print(keys)
     sentences = read_json_file(source_file_path)['Sentence']
     for sentence in sentences:
         if sentence is not None and isinstance(sentence['original_sentence'], str):
