@@ -1,11 +1,12 @@
 # spell checker
 import difflib
-import os
-import language_tool_python
+import os.path
+from language_tool_python import LanguageTool
 from autocorrect import Speller
 import json
-import nltk
-import re
+from nltk import pos_tag as nltk_pos_tag
+from nltk.tokenize import RegexpTokenizer
+from re import sub
 from string_metrics import Distances
 
 
@@ -13,7 +14,7 @@ def correct_spelling_autocorrect(sentence) -> str:
     """ A function which returns corrected spelling (by Speller from autocorrect)"""
     return Speller()(sentence)
 
-language_tool = language_tool_python.LanguageTool('en-US')
+language_tool = LanguageTool('en-US')
 
 def correct_language_tool(sentence: str) -> str:
     """ A function which returns corrected sentence (by language_tool from language_tool_python)"""
@@ -35,12 +36,12 @@ class Word:
 
 class ListOfWords:
     """ A class which includes words, which are separated by NEXT_WORD_COMBINATION"""
-    sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[^(\'\-)\w]', gaps=True)
+    sentence_tokenizer = RegexpTokenizer('[^(\'\-)\w]', gaps=True)
     __sentence_reg_pattern = r'^([ \W_]*[^A-z])'
 
     def __init__(self, sentence: str, add_by_left_click: bool = False, is_from_file: bool = False):
         # assign sentence without punctuation
-        self.original_sentence = re.sub(self.__sentence_reg_pattern, '', sentence)
+        self.original_sentence = sub(self.__sentence_reg_pattern, '', sentence)
         self.corrected_sentence = correct_language_tool(self.original_sentence)
         # capitalize sentence (due to specificity of the language_tool)
         if self.original_sentence and (
@@ -52,9 +53,9 @@ class ListOfWords:
         self.tokenized_original_sentence = self.sentence_tokenizer.tokenize(self.original_sentence)
         self.tokenized_corrected_sentence = self.sentence_tokenizer.tokenize(self.corrected_sentence)
         # assign corrected_words
-        self.original_sentence_structure = [tag[1] for tag in nltk.pos_tag(self.tokenized_original_sentence)]
+        self.original_sentence_structure = [tag[1] for tag in nltk_pos_tag(self.tokenized_original_sentence)]
         if self.original_sentence != self.corrected_sentence:
-            self.corrected_sentence_structure = [tag[1] for tag in nltk.pos_tag(self.tokenized_corrected_sentence)]
+            self.corrected_sentence_structure = [tag[1] for tag in nltk_pos_tag(self.tokenized_corrected_sentence)]
             if self.corrected_sentence_structure == self.original_sentence_structure:
                 self.corrected_sentence_structure = None
                 self.sentence_distances = Distances(self.original_sentence, self.corrected_sentence)

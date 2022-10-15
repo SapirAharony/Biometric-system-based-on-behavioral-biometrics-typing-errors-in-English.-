@@ -1,11 +1,12 @@
 #! python
-import json
 # listeners
 import pynput.keyboard as keyboard
 import pynput.mouse as mouse
 import system_features_extractor as SFExtractor
-import re
-import nltk, os, system_features_extractor, PyPDF2
+from re import search
+from nltk.tokenize import RegexpTokenizer
+import os.path, system_features_extractor
+from PyPDF2 import PdfFileReader
 from docx import Document
 
 class Combinations:
@@ -82,7 +83,7 @@ class RealTimeKeyListener:
 
     def __on_finished_context(self, at_the_end=False):
         """ Method that checks add list of words to file whenever the NEW_CONTEXT_KEYS or  combination is entered."""
-        if re.search('[0-9a-zA-Z]', self.__sentence):
+        if search('[0-9a-zA-Z]', self.__sentence):
             if self.__position == 0:
                 self.__list_of_words = SFExtractor.ListOfWords(self.__sentence)
                 if self.__list_of_words.all_words:
@@ -172,7 +173,7 @@ class RealTimeKeyListener:
 class OfflineListener:
     """ A class which should be used for 'offline' files. """
     # tokenizer to separate new context (mostly sentences)
-    __sentence_tokenizer = nltk.tokenize.RegexpTokenizer('[.;!?\n]', gaps=True)
+    __sentence_tokenizer = RegexpTokenizer('[.;!?\n]', gaps=True)
     destination_json_file_path = "C:/Users/user/Desktop/offline_destination_file_path.json"
     source_txt_file_path = "C:/Users/user/Desktop/source_file_path.json"
     file_types = ['txt', 'pdf', 'docx']
@@ -190,7 +191,7 @@ class OfflineListener:
                     text += paragraph.text
             elif self.source_txt_file_path[-3:] == 'pdf':
                 pdf_file = open(self.source_txt_file_path, 'rb')
-                pdf_reader = PyPDF2.PdfFileReader(pdf_file)
+                pdf_reader = PdfFileReader(pdf_file)
                 for page_num in range(0, pdf_reader.numPages):
                     page = pdf_reader.getPage(page_num)
                     text += page.extractText()

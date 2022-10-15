@@ -1,7 +1,4 @@
-import language_tool_python, Levenshtein, textdistance, difflib
-from autocorrect import Speller
-
-import Levenshtein, textdistance, difflib
+import textdistance
 
 
 class EditOperation:
@@ -155,7 +152,6 @@ class Distances:
 
             # token based
             if is_tokenized:
-                self.gestalt_ns = textdistance.ratcliff_obershelp.normalized_similarity(self.__word_1, self.__word_2)
                 self.sorensen_dice_ns = textdistance.sorensen_dice.normalized_similarity(self.__word_1, self.__word_2)
                 self.cosine_ns = textdistance.cosine.normalized_similarity(self.__word_1, self.__word_2)
                 self.overlap = textdistance.overlap.normalized_similarity(self.__word_1, self.__word_2)
@@ -165,6 +161,7 @@ class Distances:
 
             # Sequence based
             self.lcsstr = textdistance.lcsstr.normalized_similarity(self.__word_1, self.__word_2)
+            self.gestalt_ns = textdistance.ratcliff_obershelp.normalized_similarity(self.__word_1, self.__word_2)
 
     def set_operations(self, is_damerau=True):
         for operation in get_string_oprations(self.__word_1, self.__word_2, is_damerau):
