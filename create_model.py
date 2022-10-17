@@ -25,12 +25,12 @@ file_pth = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files\\done_miki.
 user_names = {}
 cols = [
     # edit ops
-    #'damerau_levenshtein_distance',
-    #'jaro_winkler_ns',
+    'damerau_levenshtein_distance',
+    'jaro_winkler_ns',
     # # # token based
-    #'gestalt_ns',
-    #'sorensen_dice_ns',
-    # 'overlap',
+    'gestalt_ns',
+    'sorensen_dice_ns',
+     'overlap',
     # # # phonetic
     'mra_ns',
     # # # seq based
@@ -88,6 +88,8 @@ def get_misspelled_words_df_from_json(file_path: str, cols: list, labeled: bool 
 
 
 
+
+
 df = pd.DataFrame()
 for file in os.listdir(directory):
     df = pd.concat([df, get_misspelled_words_df_from_json(directory + '\\' + file, cols=cols, labeled=True)],
@@ -116,7 +118,25 @@ path = 'C:\\Users\\user\\PycharmProjects\\bio_system\\graphs\\'
 #     plt.xlabel(col)
 #     plt.legend()
 #     plt.savefig(path+'orig\\'+col+'.png')
-df = df[cols+['label']]
+
+cols = [
+    # edit ops
+    # 'damerau_levenshtein_distance',
+    'jaro_winkler_ns',
+    # # # token based
+    # 'gestalt_ns',
+    'sorensen_dice_ns',
+     # 'overlap',
+    # # # phonetic
+    'mra_ns',
+    # # # seq based
+    #'lcsstr',
+    'ml_type_id',
+    'ml_operation_subtype_id'
+]
+
+df = df[cols+['pos_tag_org', 'pos_tag_corrected', 'label']]
+print(df.columns)
 X = df[df.columns[:-1]].values
 y = df[df.columns[-1]].values
 
@@ -150,7 +170,9 @@ print(X_train.shape, X_temp.shape, y_train.shape, y_temp.shape)
 X_valid, X_test, y_valid, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=0)
 print(X_valid.shape, X_test.shape, y_valid.shape, y_test.shape)
 
-model = tf.keras.Sequential([tf.keras.layers.Dense(8, activation='relu'), tf.keras.layers.Dense(16, activation='softmax'),tf.keras.layers.Dense(32, activation='relu'),
+model = tf.keras.Sequential([tf.keras.layers.Dense(8, activation='relu'),
+                             tf.keras.layers.Dense(32, activation='relu'),
+                            # tf.keras.layers.Dense(32, activation='relu'),
                              tf.keras.layers.Dense(1, activation='softmax')])
 model.add(tf.keras.layers.Flatten())
 
