@@ -196,7 +196,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import f_classif
 
-
 # assign ids to pos_tags
 pos_tags = ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NN', 'NNP', 'NNPS', 'NNS', 'PDT',
             'POS',
@@ -316,6 +315,8 @@ path = 'C:\\Users\\user\\PycharmProjects\\bio_system\\graphs\\'
 #     'ml_type_id',
 #     'ml_operation_subtype_id'
 # ]
+
+
 cols = [
     # edit ops
     'damerau_levenshtein_distance',
@@ -327,7 +328,7 @@ cols = [
     # # # phonetic
     'mra_ns',
     # # # seq based
-    #'lcsstr',
+    'lcsstr',
     'ml_type_id',
     'ml_operation_subtype_id',
     'ml_det0',
@@ -340,11 +341,6 @@ cols = [
     'pos_tag_corrected',
     'label']
 
-
-# selector = SelectKBest(f_classif, k=10)
-# selected_features = selector.fit_transform(train_features, train_labels)
-# f_score_indexes = (-selector.scores_).argsort()[:10]
-
 df = df[cols]
 print(df.columns)
 print(df.describe())
@@ -355,9 +351,15 @@ scaler = StandardScaler()
 X = scaler.fit_transform(X)
 data = np.hstack((X, np.reshape(y, (-1, 1))))
 
-# transformed_df = pd.DataFrame(data, columns=df.columns)
 
-
+print(X.shape)
+num_of_features = 10
+if num_of_features > len(cols):
+    num_of_features = len(cols)
+selector = SelectKBest(f_classif, k=num_of_features)
+X = selector.fit_transform(X, y)
+f_score_indexes = (-selector.scores_).argsort()[:10]
+print(f_score_indexes)
 
 
 X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.5, random_state=0)
@@ -368,22 +370,6 @@ y_train = keras.utils.to_categorical(y_train, num_classes=len(user_names.keys())
 y_valid = keras.utils.to_categorical(y_valid, num_classes=len(user_names.keys()))
 y_test = keras.utils.to_categorical(y_test, num_classes=len(user_names.keys()))
 
-
-
-model = tf.keras.Sequential()
-model.add(tf.keras.layers.Dense(64, activation='relu', name='layer_1', input_dim=len(cols)-1))
-model.add(tf.keras.layers.Dropout(0.5))
-model.add(tf.keras.layers.Dense(128, activation='relu', name='layer_2'))
-model.add(tf.keras.layers.Dropout(0.5))
-model.add(tf.keras.layers.Dense(128, activation='relu', name='layer_3'))
-model.add(tf.keras.layers.Dropout(0.5))
-model.add(tf.keras.layers.Dense(len(user_names.keys()), activation='softmax', name='output_layer'))
-
-
-sgd = tf.keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-model.compile(loss='categorical_crossentropy',
-              optimizer=sgd,
-              metrics=['accuracy'])
 #
 # model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.001),
 #               loss='categorical_crossentropy',
@@ -392,11 +378,32 @@ model.compile(loss='categorical_crossentropy',
 #     loss="binary_crossentropy", optimizer=tf.optimizers.Adam(learning_rate=0.001), metrics=["accuracy"]
 # )
 # model.add(tf.keras.layers.Flatten())
-
-
 logger = tf.keras.callbacks.TensorBoard(log_dir='logs', write_graph=True, histogram_freq=1, )
 
-history = model.fit(X_train, y_train, validation_data=(X_valid, y_valid), epochs=1200, batch_size=128)
+
+model = tf.keras.Sequential()
+model.add(tf.keras.layers.Dense(64, activation='relu', name='layer_1', input_dim=num_of_features))
+# model.add(tf.keras.layers.Dense(64, activation='relu', name='layer_1', input_dim=len(cols)-1))
+model.add(tf.keras.layers.BatchNormalization())
+model.add(tf.keras.layers.Dropout(0.5))
+model.add(tf.keras.layers.Dense(128, activation='relu', name='layer_2'))
+model.add(tf.keras.layers.BatchNormalization())
+model.add(tf.keras.layers.Dropout(0.5))
+model.add(tf.keras.layers.Dense(128, activation='relu', name='layer_3'))
+model.add(tf.keras.layers.BatchNormalization(momentum=0.95,
+        epsilon=0.005,
+        beta_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.05),
+        gamma_initializer=tf.keras.initializers.Constant(value=0.9)
+    ))
+model.add(tf.keras.layers.Dropout(0.5))
+model.add(tf.keras.layers.Dense(len(user_names.keys()), activation='softmax', name='output_layer'))
+
+
+sgd = tf.keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+model.compile(loss='categorical_crossentropy',
+              optimizer=sgd,
+              metrics=['accuracy'])
+history = model.fit(X_train, y_train, validation_data=(X_valid, y_valid), epochs=150, batch_size=128)
 
 score = model.evaluate(X_test[:-1], y_test[:-1], batch_size=128)
 print(score)
