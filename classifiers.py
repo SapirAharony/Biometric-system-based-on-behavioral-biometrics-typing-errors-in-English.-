@@ -1,3 +1,6 @@
+from sklearn import svm
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
 import random
 import keras.utils
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -36,7 +39,7 @@ user_names = {}
 is_ver_sim = True
 is_ver_sim = False
 
-num_of_features = 5
+num_of_features = 8
 
 
 # load data
@@ -152,105 +155,91 @@ cols = [
     'lcsstr',
     'ml_type_id',
     'ml_operation_subtype_id',
-    # 'ml_det0',
-    # 'ml_det1',
-    # 'ml_det2',
-    # 'ml_det3',
-    # 'ml_det4',
-    # 'ml_det5',
+    'ml_det0',
+    'ml_det1',
+    'ml_det2',
+    'ml_det3',
+    'ml_det4',
+    'ml_det5',
     'pos_tag_org',
     'pos_tag_corrected',
     'label']
 df = load_data(directory)[cols]
 
+
 # split data --> create a sample for simulation
-if is_ver_sim:
-    correct_user_name = random.choice(list(user_names.keys()))
-    df, sample = create_data_for_v_a_simulation(correct_user_name, df, 5)
+for k in range(2, len(cols)):
+    num_of_features = k
+    if is_ver_sim:
+        correct_user_name = random.choice(list(user_names.keys()))
+        df, sample = create_data_for_v_a_simulation(correct_user_name, df, 5)
 
-# standarization
-scaler = StandardScaler()
+    # standarization
+    scaler = StandardScaler()
 
-# scaler = MinMaxScaler(feature_range=(0, 1))
-X = scaler.fit_transform(df.iloc[:, :-1])
+    # scaler = MinMaxScaler(feature_range=(0, 1))
+    X = scaler.fit_transform(df.iloc[:, :-1])
 
-# define X and y
-y = df[df.columns[-1]].values
+    # define X and y
+    y = df[df.columns[-1]].values
+    # choose features
+    selector = SelectKBest(f_classif, k=num_of_features)
+    X = selector.fit_transform(X, y)
+    f_score_column_indexes = (-selector.scores_).argsort()[:num_of_features]  # choosen featuers indexes
+    chosen_cols = [cols[k] for k in f_score_column_indexes]
 
-# choose features
-selector = SelectKBest(f_classif, k=num_of_features)
-X = selector.fit_transform(X, y)
-f_score_column_indexes = (-selector.scores_).argsort()[:num_of_features]  # choosen featuers indexes
-chosen_cols = [cols[k] for k in f_score_column_indexes]
+    # split data
 
-
-# split data
-
-if not is_ver_sim:
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
-    y_test = keras.utils.to_categorical(y_test, num_classes=len(user_names.keys()))
-
-
-else:
-    X_train = X
-    y_train = y
-
-print(X_train.shape)
-print(y_train.shape)
-
-y_train = keras.utils.to_categorical(y_train, num_classes=len(user_names.keys()))
+    if not is_ver_sim:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+        # y_test = keras.utils.to_categorical(y_test, num_classes=len(user_names.keys()))
 
 
+    else:
+        X_train = X
+        y_train = y
 
-# define callbacks
-logger = tf.keras.callbacks.TensorBoard(log_dir='logs',
-                                        write_graph=True,
-                                        histogram_freq=1)
+    # y_train = keras.utils.to_categorical(y_train, num_classes=len(user_names.keys()))
 
-earlystopping = callbacks.EarlyStopping(monitor='val_loss',
-                                        mode='min',
-                                        patience=7,
-                                        restore_best_weights=True)
+    rbf = svm.SVC(kernel='rbf', gamma=0.5, C=0.1).fit(X_train, y_train)
+    poly = svm.SVC(kernel='poly', degree=3, C=1).fit(X_train, y_train)
+    poly_pred = poly.predict(X_test)
+    rbf_pred = rbf.predict(X_test)
+    poly_accuracy = accuracy_score(y_test, poly_pred)
+    poly_f1 = f1_score(y_test, poly_pred, average='weighted')
+    print(k)
+    print('Accuracy (Polynomial Kernel): ', "%.2f" % (poly_accuracy * 100))
+    print('F1 (Polynomial Kernel): ', "%.2f" % (poly_f1 * 100))
+    rbf_accuracy = accuracy_score(y_test, rbf_pred)
+    rbf_f1 = f1_score(y_test, rbf_pred, average='weighted')
+    print('Accuracy (RBF Kernel): ', "%.2f" % (rbf_accuracy * 100))
+    print('F1 (RBF Kernel): ', "%.2f" % (rbf_f1 * 100))
 
-# define model
+    from sklearn.naive_bayes import GaussianNB
 
-model = tf.keras.Sequential()
-model.add(tf.keras.layers.Dense(64, activation='relu', name='layer_1', input_dim=num_of_features))
-model.add(tf.keras.layers.BatchNormalization())
-model.add(tf.keras.layers.Dropout(0.5))
-model.add(tf.keras.layers.Dense(32, activation='relu', name='layer_2'))
-model.add(tf.keras.layers.BatchNormalization())
-model.add(tf.keras.layers.Dropout(0.5))
-model.add(tf.keras.layers.Dense(32, activation='relu', name='layer_3'))
-model.add(tf.keras.layers.BatchNormalization(momentum=0.95,
-                                             epsilon=0.005,
-                                             beta_initializer=tf.keras.initializers.RandomNormal(mean=0.0,
-                                                stddev=0.05),
-                                             gamma_initializer=tf.keras.initializers.Constant(value=0.9)
-                                             ))
-model.add(tf.keras.layers.Dropout(0.5))
-model.add(tf.keras.layers.Dense(len(user_names.keys()), activation='softmax', name='output_layer'))
+    gnb = GaussianNB().fit(X_train, y_train)
+    gnb_predictions = gnb.predict(X_test)
+    print('\n')
+    # accuracy on X_test
+    gnb_accuracy = gnb.score(X_test, y_test)
+    print('GNB', gnb_accuracy * 100)
+    gnb_f1 = f1_score(y_test, gnb_predictions, average='weighted')
+    print('Accuracy: ', "%.2f" % (gnb_accuracy * 100))
+    print('F1: ', "%.2f" % (gnb_f1 * 100))
 
-sgd = tf.keras.optimizers.SGD(learning_rate=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-model.compile(loss='categorical_crossentropy',
-              optimizer=sgd,
-              metrics=['accuracy'])
+    # training a KNN classifier
+    from sklearn.neighbors import KNeighborsClassifier
 
-history = model.fit(tf.expand_dims(X_train, axis=-1), y_train, validation_split=0.4, epochs=1000,
-                        batch_size=128, callbacks=[earlystopping, logger])
+    knn = KNeighborsClassifier(n_neighbors=7).fit(X_train, y_train)
+    print('\n')
+    # accuracy on X_test
+    knn_accuracy = knn.score(X_test, y_test)
+    knn_predictions = knn.predict(X_test)
+    print('KNN', knn_accuracy)
+    knn_f1 = f1_score(y_test, knn_predictions, average='weighted')
+    print('Accuracy: ', "%.2f" % (knn_accuracy * 100))
+    print('F1: ', "%.2f" % (knn_f1 * 100))
+    print(10*'\n')
 
-model_summary = model.summary()
-print(model_summary)
 
-if not is_ver_sim:
-    plot_result(history, "loss")
-    plot_result(history, "accuracy")
-    score = model.evaluate(X_test, y_test, batch_size=128)
-    print(y_test)
-    print("Score: ", score)
-    # plot_result("accuracy")
-else:
-    sample_X = sample.iloc[:, :-1]
-    sample_y = sample[sample.columns[-1]].values
-    prediction = model.predict(sample_X, batch_size=None, verbose=0, steps=None)
-    print(prediction)
+
