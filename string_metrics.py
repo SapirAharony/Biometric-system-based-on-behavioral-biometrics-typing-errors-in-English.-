@@ -1,5 +1,5 @@
 import textdistance
-
+from gensim.models import Word2Vec
 
 class EditOperation:
     ml_repr_size = 8
@@ -127,6 +127,8 @@ def get_string_oprations(word_1, word_2, is_damerau=True):
     return operations_list
 
 
+
+
 class Distances:
     lev_thresholds = {'short_word': (4, 0.3), 'longer_words': (5, 0.6)}
     examples = {}
@@ -162,6 +164,8 @@ class Distances:
             # Sequence based
             self.lcsstr = textdistance.lcsstr.normalized_similarity(self.__word_1, self.__word_2)
             self.gestalt_ns = textdistance.ratcliff_obershelp.normalized_similarity(self.__word_1, self.__word_2)
+            self.ml = []
+            self.__get_ml_repr()
 
     def set_operations(self, is_damerau=True):
         for operation in get_string_oprations(self.__word_1, self.__word_2, is_damerau):
@@ -258,4 +262,14 @@ class Distances:
             return Insert(operation_subtype_id=4, new_char=self.__word_2[operation[2]], idx=operation[1] + 1,
                           previous_char="",
                           next_char=self.__word_1[operation[1] + 1])
+
+    def __get_ml_repr(self):
+        distances_ml = []
+        for k in self.__dict__.values():
+            if isinstance(k, float) or isinstance(k, int):
+                distances_ml.append(k)
+        for op in self.operations:
+            self.ml.append(distances_ml + op.ml_repr)
+
+
 

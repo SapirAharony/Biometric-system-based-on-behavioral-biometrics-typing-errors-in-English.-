@@ -8,7 +8,7 @@ from nltk import pos_tag as nltk_pos_tag
 from nltk.tokenize import RegexpTokenizer
 from re import sub
 from string_metrics import Distances
-
+from gensim.models import Word2Vec
 
 def correct_spelling_autocorrect(sentence) -> str:
     """ A function which returns corrected spelling (by Speller from autocorrect)"""
@@ -20,7 +20,6 @@ def correct_language_tool(sentence: str) -> str:
     """ A function which returns corrected sentence (by language_tool from language_tool_python)"""
     return language_tool.correct(sentence)
 
-
 class Word:
     """ A class which includes words, which are separated by NEXT_WORD_KEYS"""
     def __init__(self, word: str, pos_tag: str, corrected_word: str = None, corrected_word_tag: str = None):
@@ -30,8 +29,9 @@ class Word:
         self.corrected_word_tag = corrected_word_tag
         if corrected_word is not None:
             self.distance = Distances(self.original_word, self.corrected_word, is_tokenized=True)
-            if not self.distance.__dict__:
+            if not self.distance:
                 delattr(self, 'distance')
+
 
 
 class ListOfWords:

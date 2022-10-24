@@ -33,7 +33,7 @@ file_pth = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files\\done_miki.
 user_names = {}
 
 
-is_ver_sim = True
+# is_ver_sim = True
 is_ver_sim = False
 
 num_of_features = 5
@@ -128,15 +128,7 @@ def create_data_for_v_a_simulation(correct_user_name: str, data_frame: pd.DataFr
     return data_frame, sample
 
 
-def plot_result(history, item):
-    plt.plot(history.history[item], label=item)
-    plt.plot(history.history["val_" + item], label="val_" + item)
-    plt.xlabel("Epochs")
-    plt.ylabel(item)
-    plt.title("Train and Validation {} Over Epochs".format(item), fontsize=14)
-    plt.legend()
-    plt.grid()
-    plt.show()
+
 
 cols = [
     # edit ops
@@ -152,15 +144,17 @@ cols = [
     'lcsstr',
     'ml_type_id',
     'ml_operation_subtype_id',
-    # 'ml_det0',
-    # 'ml_det1',
-    # 'ml_det2',
-    # 'ml_det3',
+    'ml_det0',
+    'ml_det1',
+    'ml_det2',
+    'ml_det3',
     # 'ml_det4',
     # 'ml_det5',
     'pos_tag_org',
     'pos_tag_corrected',
     'label']
+
+
 df = load_data(directory)[cols]
 
 # split data --> create a sample for simulation
@@ -171,11 +165,12 @@ if is_ver_sim:
 # standarization
 scaler = StandardScaler()
 
-# scaler = MinMaxScaler(feature_range=(0, 1))
 X = scaler.fit_transform(df.iloc[:, :-1])
 
 # define X and y
 y = df[df.columns[-1]].values
+
+"""
 
 # choose features
 selector = SelectKBest(f_classif, k=num_of_features)
@@ -195,62 +190,60 @@ else:
     X_train = X
     y_train = y
 
-print(X_train.shape)
-print(y_train.shape)
-
-y_train = keras.utils.to_categorical(y_train, num_classes=len(user_names.keys()))
+y_train_categorical = keras.utils.to_categorical(y_train, num_classes=len(user_names.keys()))
 
 
 
-# define callbacks
-logger = tf.keras.callbacks.TensorBoard(log_dir='logs',
-                                        write_graph=True,
-                                        histogram_freq=1)
-
-earlystopping = callbacks.EarlyStopping(monitor='val_loss',
-                                        mode='min',
-                                        patience=7,
-                                        restore_best_weights=True)
-
-# define model
-
-model = tf.keras.Sequential()
-model.add(tf.keras.layers.Dense(64, activation='relu', name='layer_1', input_dim=num_of_features))
-model.add(tf.keras.layers.BatchNormalization())
-model.add(tf.keras.layers.Dropout(0.5))
-model.add(tf.keras.layers.Dense(32, activation='relu', name='layer_2'))
-model.add(tf.keras.layers.BatchNormalization())
-model.add(tf.keras.layers.Dropout(0.5))
-model.add(tf.keras.layers.Dense(32, activation='relu', name='layer_3'))
-model.add(tf.keras.layers.BatchNormalization(momentum=0.95,
-                                             epsilon=0.005,
-                                             beta_initializer=tf.keras.initializers.RandomNormal(mean=0.0,
-                                                stddev=0.05),
-                                             gamma_initializer=tf.keras.initializers.Constant(value=0.9)
-                                             ))
-model.add(tf.keras.layers.Dropout(0.5))
-model.add(tf.keras.layers.Dense(len(user_names.keys()), activation='softmax', name='output_layer'))
-
-sgd = tf.keras.optimizers.SGD(learning_rate=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-model.compile(loss='categorical_crossentropy',
-              optimizer=sgd,
-              metrics=['accuracy'])
-
-history = model.fit(tf.expand_dims(X_train, axis=-1), y_train, validation_split=0.4, epochs=1000,
-                        batch_size=128, callbacks=[earlystopping, logger])
-
-model_summary = model.summary()
-print(model_summary)
-
-if not is_ver_sim:
-    plot_result(history, "loss")
-    plot_result(history, "accuracy")
-    score = model.evaluate(X_test, y_test, batch_size=128)
-    print(y_test)
-    print("Score: ", score)
-    # plot_result("accuracy")
-else:
-    sample_X = sample.iloc[:, :-1]
-    sample_y = sample[sample.columns[-1]].values
-    prediction = model.predict(sample_X, batch_size=None, verbose=0, steps=None)
-    print(prediction)
+# # define callbacks
+# logger = tf.keras.callbacks.TensorBoard(log_dir='rocs',
+#                                         write_graph=True,
+#                                         histogram_freq=1)
+# 
+# earlystopping = callbacks.EarlyStopping(monitor='val_loss',
+#                                         mode='min',
+#                                         patience=7,
+#                                         restore_best_weights=True)
+# 
+# # define model
+# 
+# model = tf.keras.Sequential()
+# model.add(tf.keras.layers.Dense(64, activation='relu', name='layer_1', input_dim=num_of_features))
+# model.add(tf.keras.layers.BatchNormalization())
+# model.add(tf.keras.layers.Dropout(0.5))
+# model.add(tf.keras.layers.Dense(32, activation='relu', name='layer_2'))
+# model.add(tf.keras.layers.BatchNormalization())
+# model.add(tf.keras.layers.Dropout(0.5))
+# model.add(tf.keras.layers.Dense(32, activation='relu', name='layer_3'))
+# model.add(tf.keras.layers.BatchNormalization(momentum=0.95,
+#                                              epsilon=0.005,
+#                                              beta_initializer=tf.keras.initializers.RandomNormal(mean=0.0,
+#                                                 stddev=0.05),
+#                                              gamma_initializer=tf.keras.initializers.Constant(value=0.9)
+#                                              ))
+# model.add(tf.keras.layers.Dropout(0.5))
+# model.add(tf.keras.layers.Dense(len(user_names.keys()), activation='softmax', name='output_layer'))
+# 
+# sgd = tf.keras.optimizers.SGD(learning_rate=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+# model.compile(loss='categorical_crossentropy',
+#               optimizer=sgd,
+#               metrics=['accuracy'])
+# 
+# history = model.fit(tf.expand_dims(X_train, axis=-1), y_train, validation_split=0.4, epochs=1000,
+#                         batch_size=128, callbacks=[earlystopping, logger])
+# 
+# model_summary = model.summary()
+# print(model_summary)
+# 
+# if not is_ver_sim:
+#     plot_result(history, "loss")
+#     plot_result(history, "accuracy")
+#     score = model.evaluate(X_test, y_test, batch_size=128)
+#     print(y_test)
+#     print("Score: ", score)
+#     # plot_result("accuracy")
+# else:
+#     sample_X = sample.iloc[:, :-1]
+#     sample_y = sample[sample.columns[-1]].values
+#     prediction = model.predict(sample_X, batch_size=None, verbose=0, steps=None)
+#     print(prediction)
+"""
