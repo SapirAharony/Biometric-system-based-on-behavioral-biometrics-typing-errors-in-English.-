@@ -5,12 +5,7 @@ import pandas as pd
 import os
 from json import load
 import numpy as np
-import matplotlib.pyplot as plt
-import tensorflow as tf
-from sklearn.model_selection import train_test_split
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import f_classif
-from keras import callbacks
+from itertools import combinations
 
 # assign ids to pos_tags
 pos_tags = ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NN', 'NNP', 'NNPS', 'NNS', 'PDT',
@@ -101,7 +96,7 @@ def get_misspelled_words_df_from_json(file_path: str, labeled: bool = True, use_
         else:
             if name not in user_names.keys():
                 user_names[name] = max(user_names.values()) + 1
-        misspelled['label'] = [user_names[name] for _ in range(misspelled.shape[0])]
+        misspelled['user_label'] = [user_names[name] for _ in range(misspelled.shape[0])]
     return misspelled
 
 
@@ -123,11 +118,28 @@ def create_data_for_v_a_simulation(correct_user_name: str, data_frame: pd.DataFr
     user_data = user_data[user_data.index.isin(sample.index.tolist()) == False]
     user_data.reindex()
     sample.reindex()
-    data_frame = pd.concat([data_frame[data_frame['label'] != user_names[correct_user_name]], user_data])
+    data_frame = pd.concat([data_frame[data_frame['user_label'] != user_names[correct_user_name]], user_data])
     del user_data
     return data_frame, sample
 
+scaler = StandardScaler()
 
+
+def create_ngrams(data_frame, n_gram_size=8, num_of_vecs_per_user=150):
+    users_original_data, user_n_grams, result_X, result_Y = {}, {}, [], []
+    for lab in data_frame['user_label'].unique():
+        users_original_data[lab] = data_frame[data_frame['user_label'] == lab]
+        users_original_data[lab] = scaler.fit_transform(users_original_data[lab].iloc[:, :-1])
+    for u_id in users_original_data.keys():
+        user_n_grams[u_id] = np.array(
+            random.sample(list(combinations(users_original_data[u_id], n_gram_size)), num_of_vecs_per_user))
+        # result_X[u_id] = []
+        for vec_id in range(len(user_n_grams[u_id])):
+            result_X.append(user_n_grams[u_id][vec_id].flatten())
+        for _ in range(num_of_vecs_per_user):
+            result_Y.append(u_id)
+    del user_n_grams
+    return result_X, result_Y
 
 
 cols = [
@@ -148,27 +160,38 @@ cols = [
     'ml_det1',
     'ml_det2',
     'ml_det3',
-    # 'ml_det4',
-    # 'ml_det5',
+    'ml_det4',
+    'ml_det5',
     'pos_tag_org',
     'pos_tag_corrected',
-    'label']
+    'user_label']
 
 
 df = load_data(directory)[cols]
 
-# split data --> create a sample for simulation
-if is_ver_sim:
-    correct_user_name = random.choice(list(user_names.keys()))
-    df, sample = create_data_for_v_a_simulation(correct_user_name, df, 5)
 
-# standarization
-scaler = StandardScaler()
+X, y = create_ngrams(df)
 
-X = scaler.fit_transform(df.iloc[:, :-1])
+y = np.array(y)
 
-# define X and y
-y = df[df.columns[-1]].values
+X = scaler.fit_transform(X)
+
+# df = df[df.label == 1]
+# df.reindex(df.index, copy=False)
+# print(df)
+# # split data --> create a sample for simulation
+# # standarization
+# scaler = StandardScaler()
+# for lab in df.label.unique():
+#     users_data[lab] = scaler.fit_transform(df.iloc[:, :-1])
+# X = scaler.fit_transform(df.iloc[:, :-1])
+#
+# # define X and y
+# y = df[df.columns[-1]].values
+#
+# print(X)
+# print(5*'\n')
+# print(y)
 
 """
 

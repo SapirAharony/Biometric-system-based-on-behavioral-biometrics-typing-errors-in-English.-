@@ -1,7 +1,6 @@
 from sklearn import svm
-from sklearn.metrics import auc, roc_auc_score, roc_curve
+from sklearn.metrics import auc, roc_auc_score, roc_curve, plot_roc_curve
 from sklearn.preprocessing import label_binarize
-import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import SelectKBest
@@ -9,42 +8,76 @@ from sklearn.feature_selection import f_classif
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.multiclass import OneVsRestClassifier
 from create_model import cols, X, y, user_names
 import operator
 from itertools import cycle
 import matplotlib
+from os import path, makedirs
+
 
 matplotlib.use('Agg')
-from os import path, makedirs
+
 
 
 def get_results(classif, X_tr, y_tr, X_tst, y_tst):
     classifier = classif.fit(X_tr, y_tr)
     predictions = classifier.predict(X_tst)
-    plot_multiclass_roc(classifier, X_tst, y_tst, len(user_names.keys()))
+    acc = round(accuracy_score(predictions, y_tst)*100, 2)
+    plot_multiclass_roc(classifier, X_tst, y_tst,len(user_names.keys()), acc)
     if hasattr(classifier, 'predict_proba'):
         roc_auc = roc_auc_score(y_tst, classifier.predict_proba(X_tst), multi_class='ovr')
-        return (roc_auc, round(accuracy_score(predictions, y_tst)*100, 2))
-    else: return round(accuracy_score(predictions, y_tst)*100, 2)
+        return (roc_auc, acc)
+    else: return acc
 
 
+def write_dict_to_file(dest_file: str, title:str, dictionary: dict):
+    with open(dest_file, 'a+') as f:
+        f.write(title + str(dictionary) + '\n')
+        # for k in dictionary:
+        #     f.write(str(k) + '->' + str(dictionary[k]) + '\n')
+
+# def multiplot():
+#     plt.figure(figsize=(12, 8))
+#     bins = [i / 20 for i in range(20)] + [1]
+#     classes = model_multiclass.classes_
+#     roc_auc_ovr = {}
+#     for i in range(len(classes)):
+#         # Gets the class
+#         c = classes[i]
+#
+#         # Prepares an auxiliar dataframe to help with the plots
+#         df_aux = X_test.copy()
+#         df_aux['class'] = [1 if y == c else 0 for y in y_test]
+#         df_aux['prob'] = y_proba[:, i]
+#         df_aux = df_aux.reset_index(drop=True)
+#
+#         # Plots the probability distribution for the class and the rest
+#         ax = plt.subplot(2, 3, i + 1)
+#         sns.histplot(x="prob", data=df_aux, hue='class', color='b', ax=ax, bins=bins)
+#         ax.set_title(c)
+#         ax.legend([f"Class: {c}", "Rest"])
+#         ax.set_xlabel(f"P(x = {c})")
+#
+#         # Calculates the ROC Coordinates and plots the ROC Curves
+#         ax_bottom = plt.subplot(2, 3, i + 4)
+#         tpr, fpr = get_all_roc_coordinates(df_aux['class'], df_aux['prob'])
+#         plot_roc_curve(tpr, fpr, scatter=False, ax=ax_bottom)
+#         ax_bottom.set_title("ROC Curve OvR")
+#
+#         # Calculates the ROC AUC OvR
+#         roc_auc_ovr[c] = roc_auc_score(df_aux['class'], df_aux['prob'])
+#     plt.tight_layout()
 
 
-
-
-def plot_multiclass_roc(classifier, X_tst, y_tst, num_of_classes, dest_driectory= "C:\\Users\\user\\PycharmProjects\\bio_system\\rocs"):
+def plot_multiclass_roc(classifier, X_tst, y_tst, num_of_classes, acc, dest_driectory= f"C:\\Users\\user\\PycharmProjects\\bio_system\\rocs\\{len(cols)-1}"):
     fpr, tpr, roc_auc = {}, {}, {}
     y_tst = label_binarize(y_tst, classes=[_ for _ in range(num_of_classes)])
-    print(X_tst.shape)
     for i in range(num_of_classes):
         if hasattr(classifier,'predict_proba'):
             fpr[i], tpr[i], _ = roc_curve(y_tst[:, i], classifier.predict_proba(X_tst)[:, i])
         elif hasattr(classifier, 'decision_function'):
             fpr[i], tpr[i], _ = roc_curve(y_tst[:, i], classifier.decision_function(X_tst)[:, i])
         roc_auc[i] = auc(fpr[i], tpr[i])
-
-    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(num_of_classes)]))
     lines = ["-", "--", "-.", ":"]
     linecycler = cycle(lines)
     # Plot of a ROC curve for a specific class
@@ -54,14 +87,20 @@ def plot_multiclass_roc(classifier, X_tst, y_tst, num_of_classes, dest_driectory
     plt.plot([0, 1], [0, 1], 'k--')
     plt.xlim([0.0, 1.02])
     plt.ylim([0.0, 1.02])
+    textstr = f'accuracy{acc}'
+    # plt.plot(all_fpr, all_tpr, label='Label')
+    plt.text(0.05, 0.95, textstr, verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
     for i in range(num_of_classes):
         plt.plot(fpr[i], tpr[i], next(linecycler), label="{} ROC curve (area = ' {})".format([name for name, id in user_names.items() if id == i][0], roc_auc[i]))
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
         plt.title(f'Receiver operating characteristic {classifier}')
         plt.legend(loc="lower right")
-    print(dest_driectory + '\\' + str(classifier) + '\\' + str(X_tst.shape[1]) + '.png')
-    plt.savefig(dest_driectory + '\\' + str(classifier) + '\\' + str(X_tst.shape[1]) + '.png')
+
+    if not path.exists(dest_driectory + '\\' + str(classifier)):
+        makedirs(dest_driectory + '\\' + str(classifier))
+    plt.show()
+    # plt.savefig(dest_driectory + '\\' + str(classifier) + '\\' + str(X_tst.shape[1]) + '.png')
     return plt
 
 
@@ -115,81 +154,19 @@ print('knn_seven', knn_seven)
 print('knn_eight', knn_eight)
 print('knn_nine', knn_nine)
 print('gnb', gnb)
+features['all'] = cols
 print(features)
-# rbf = svm.SVC(kernel='rbf', gamma=0.5, C=0.1).fit(X_train, y_train)
-# poly = svm.SVC(kernel='poly', degree=3, C=1).fit(X_train, y_train)
-# poly_pred = poly.predict(X_test)
-# rbf_pred = rbf.predict(X_test)
-# svc_poly.append(accuracy_score(y_test, poly_pred))
 
-# rbf_accuracy = accuracy_score(y_test, rbf_pred)
+write_dict_to_file(f"/rocs/{len(cols)-1}/features.txt", "features", features)
+write_dict_to_file(f"/rocs/{len(cols)-1}/features.txt", "svc_linear", svc_linear)
+write_dict_to_file(f"/rocs/{len(cols)-1}/features.txt", "svc_poly", svc_poly)
+write_dict_to_file(f"/rocs/{len(cols)-1}/features.txt", "svc_rbf", svc_rbf)
+write_dict_to_file(f"/rocs/{len(cols)-1}/features.txt", "knn_three", knn_three)
+write_dict_to_file(f"/rocs/{len(cols)-1}/features.txt", "knn_four", knn_four)
+write_dict_to_file(f"/rocs/{len(cols)-1}/features.txt", "knn_five", knn_five)
+write_dict_to_file(f"/rocs/{len(cols)-1}/features.txt", "knn_six", knn_six)
+write_dict_to_file(f"/rocs/{len(cols)-1}/features.txt", "knn_seven", knn_seven)
+write_dict_to_file(f"/rocs/{len(cols)-1}/features.txt", "knn_eight", knn_eight)
+write_dict_to_file(f"/rocs/{len(cols)-1}/features.txt", "knn_nine", knn_nine)
+write_dict_to_file(f"/rocs/{len(cols)-1}/features.txt", "gnb", gnb)
 
-
-# from sklearn.naive_bayes import GaussianNB
-#
-# gnb = GaussianNB().fit(X_train, y_train)
-# gnb_predictions = gnb.predict(X_test)
-# # accuracy on X_test
-# gnb_accuracy = accuracy_score(X_test, y_test)
-#
-#
-#
-#
-#
-#
-# # training a KNN classifier
-# from sklearn.neighbors import KNeighborsClassifier
-# knn = KNeighborsClassifier(n_neighbors=7).fit(X_train, y_train)
-# # accuracy on X_test
-# knn_accuracy = knn.score(X_test, y_test)
-# knn_predictions = knn.predict(X_test)
-#
-#
-#
-# # training a KNN classifier
-# from sklearn.neighbors import KNeighborsClassifier
-# knn = KNeighborsClassifier(n_neighbors=5).fit(X_train, y_train)
-# # accuracy on X_test
-# knn_accuracy = knn.score(X_test, y_test)
-# knn_prediction = knn.predict(X_test)
-
-
-'''
-
-
-result = confusion_matrix(y_test, knn_predictions)
-print("Confusion Matrix:")
-print(result)
-result1 = classification_report(y_test, knn_predictions)
-print("Classification Report:")
-print(result1)
-print(12*'\n*')
-
-
-result = confusion_matrix(y_test, gnb_predictions)
-print("Confusion Matrix:")
-print(result)
-result1 = classification_report(y_test, gnb_predictions)
-print("Classification Report:")
-print(result1)
-print('\n')
-
-result = confusion_matrix(y_test, gnb_predictions)
-print("Confusion Matrix:")
-print(result)
-result1 = classification_report(y_test, gnb_predictions)
-print("Classification Report:")
-print(result1)
-print('\n')
-
-result = confusion_matrix(y_test, rbf_pred)
-print("Confusion Matrix:")
-print(result)
-
-result1 = classification_report(y_test, rbf_pred)
-print("Classification Report:")
-print(result1)
-print('\n')
-print(result)
-result1 = classification_report(y_test, poly_pred)
-'''
