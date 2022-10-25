@@ -1,110 +1,125 @@
-# import system_features_extractor, os, string_metrics
-# import pandas as pd
-# from json import load
-# import numpy as np
-# from gensim.models import Word2Vec
-#
-# ################################## exctract data from original files
-#
-# def read_json_file(path_to_file):
-#     with open(path_to_file, 'r') as f:
-#         data = load(f)
-#     return data
-#
-#
+import system_features_extractor, os
+from json import load
+
+
+################################## exctract data from original files
+
+def read_json_file(path_to_file):
+    with open(path_to_file, 'r') as f:
+        data = load(f)
+    return data
+
+
 # source_file_dir = 'C:\\Users\\user\\Desktop\\inz_wyniki'
 # dest_file_dir = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files'
 #
-# # for file in os.listdir(source_file_dir):
-# #     if file[-4:] == 'json':
-# #         system_features_extractor.extract_data(source_file_dir + '\\' + file, dest_file_dir + '\\done_' + file, file[:-5].capitalize())
+# for file in os.listdir(source_file_dir):
+#     if file[-4:] == 'json':
+#         system_features_extractor.extract_data(source_file_dir + '\\' + file, dest_file_dir + '\\done_' + file, file[:-5].capitalize())
 #
-# # print(string_metrics.Distances('test', 'ter', is_tokenized=True).__dict__)
-#
-# lista = []
-# print(system_features_extractor.Word('tert', 'NN','tests', 'NNP').__dict__['distance'].__dict__)
-# # dystans = string_metrics.Distances('test', 'ter', is_tokenized=True)
-# #
-#
-# vec_size = 1
-# pos_tags = [
-#     ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NN', 'NNP', 'NNPS', 'NNS', 'PDT', 'POS',
-#      'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT',
-#      'WP', 'WP$', 'WRB']]
-# pos_tag_word2vec = Word2Vec(pos_tags, min_count=1, vector_size=vec_size)
-#
-# for k in pos_tags[0]:
-#     print(pos_tag_word2vec.wv.get_vector(k))
-#
-#
-# # for k in string_metrics.Distances('test', 'ter',  is_tokenized=True).__dict__:
-# #     if isinstance(k, float) or isinstance(k, int):
-# #         lista.append(k)
-#
-# # print(lista + dystans.operations.)
+# for file in os.listdir(dest_file_dir):
+#     system_features_extractor.add_str_to_json(dest_file_dir+'\\'+file, file[5:-5].capitalize())
 
-dcitionary = {}
-print(dcitionary.__str__())
-
-import shutil
+import random
+import keras.utils
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+import pandas as pd
 import os
+from json import load
+import numpy as np
+from itertools import combinations
+
+# assign ids to pos_tags
+pos_tags = ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NN', 'NNP', 'NNPS', 'NNS', 'PDT',
+            'POS',
+            'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT',
+            'WP', 'WP$', 'WRB']
+tmp = {}
+i = 0
+for tag in pos_tags:
+    tmp[tag] = i
+    i += 1
+pos_tags = tmp
+del tmp
+directory = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files\\'
+
+def load_data(files_directory: str) -> pd.DataFrame:
+    df = pd.DataFrame()
+    for file in os.listdir(files_directory):
+        df = pd.concat([df, get_misspelled_words_df_from_json(files_directory + '\\' + file, labeled=True)],
+                       ignore_index=True)
+
+    # drop None (clear data)
+    df = df.dropna().reset_index()
+    del df['index']
+    return df
+user_names = {}
+def get_misspelled_words_df_from_json(file_path: str, labeled: bool = True, use_tags: bool = True):
+    cols = [
+        # edit ops
+        'damerau_levenshtein_distance',
+        'jaro_winkler_ns',
+        # # # # token based
+        'gestalt_ns',
+        'sorensen_dice_ns',
+        'overlap',
+        # # phonetic
+        'mra_ns',
+        # # # seq based
+        'lcsstr',
+        'ml_type_id',
+        'ml_operation_subtype_id',
+        'ml_det0',
+        'ml_det1',
+        'ml_det2',
+        'ml_det3',
+        'ml_det4',
+        'ml_det5'
+    ]
+    global user_names
+    misspelled = pd.DataFrame(columns=cols)
+    for dictionary in read_json_file(file_path)['Sentence']:
+        distances_ml = []
+        if 'misspelled_words' in dictionary.keys() and len(dictionary['misspelled_words']) > 0:
+            id = 0
+            for misspell in dictionary['misspelled_words']:
+                if use_tags:
+                    tags = [pos_tags[misspell['pos_tag']], pos_tags[misspell['corrected_word_tag']]]
+                if 'distance' in misspell.keys() and 'operations' in misspell['distance'].keys():
+                    id += 1
+                    for dist in cols:
+                        if dist in misspell['distance'].keys() and id < 2:
+                            if isinstance(misspell['distance'][dist], float) or isinstance(dist, int):
+                                distances_ml.append(misspell['distance'][dist])
+                    for op in misspell['distance']['operations']:
+
+                        tmp = [float(k) for k in op['ml_repr']]
+                        if not use_tags:
+                            misspelled = pd.concat([misspelled, pd.DataFrame([distances_ml + tmp], columns=cols)],
+                                                   ignore_index=True)
+                        else:
+                            misspelled = pd.concat([misspelled, pd.DataFrame([distances_ml + tmp + tags],
+                                                                             columns=cols + ['pos_tag_org',
+                                                                                             'pos_tag_corrected'])],
+                                                   ignore_index=True)
+    if labeled:
+        name = read_json_file(file_path)['Name']
+        if not user_names:
+            user_names[name] = 0
+        else:
+            if name not in user_names.keys():
+                user_names[name] = max(user_names.values()) + 1
+        misspelled['user_label'] = [user_names[name] for _ in range(misspelled.shape[0])]
+    return misspelled
 
 
-# Function to create new folder if not exists
-def make_new_folder(folder_name, parent_folder):
-    # Path
-    path = os.path.join(parent_folder, folder_name)
-
-    # Create the folder
-    # 'new_folder' in
-    # parent_folder
-    try:
-        # mode of the folder
-        mode = 0o777
-
-        # Create folder
-        os.mkdir(path, mode)
-    except OSError as error:
-        print(error)
+df = load_data(directory)
+print(df)
 
 
-# current folder path
-current_folder = "C:\\Users\\user\\PycharmProjects\\bio_system\\rocs\\14"
 
-# list of folders to be merged
-list_dir = [name for name in os.listdir("C:\\Users\\user\\PycharmProjects\\bio_system\\rocs\\14") if os.path.isdir(os.path.join("C:\\Users\\user\\PycharmProjects\\bio_system\\rocs\\14", name))]
-# enumerate on list_dir to get the
-# content of all the folders ans store
-# it in a dictionary
-content_list = {}
-for index, val in enumerate(list_dir):
-    path = os.path.join(current_folder, val)
-    content_list[list_dir[index]] = os.listdir(path)
 
-# folder in which all the content will
-# be merged
-merge_folder = "merge_folder"
 
-# merge_folder path - current_folder
-# + merge_folder
-merge_folder_path = os.path.join(current_folder, merge_folder)
 
-# create merge_folder if not exists
-make_new_folder(merge_folder, current_folder)
-
-# loop through the list of folders
-for sub_dir in content_list:
-
-    # loop through the contents of the
-    # list of folders
-    for contents in content_list[sub_dir]:
-        # make the path of the content to move
-        path_to_content = sub_dir + "/" + contents
-
-        # make the path with the current folder
-        dir_to_move = os.path.join(current_folder, path_to_content)
-
-        # move the file
-        shutil.move(dir_to_move, merge_folder_path)
 
 

@@ -1,6 +1,5 @@
 import random
-import keras.utils
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import os
 from json import load
@@ -27,12 +26,7 @@ file_pth = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files\\done_miki.
 # define users and columns to read
 user_names = {}
 
-
-# is_ver_sim = True
 is_ver_sim = False
-
-num_of_features = 5
-
 
 # load data
 def read_json_file(path_to_file):
@@ -72,7 +66,7 @@ def get_misspelled_words_df_from_json(file_path: str, labeled: bool = True, use_
             for misspell in dictionary['misspelled_words']:
                 if use_tags:
                     tags = [pos_tags[misspell['pos_tag']], pos_tags[misspell['corrected_word_tag']]]
-                if 'distance' in misspell.keys() and misspell['distance']['operations']:
+                if 'distance' in misspell.keys() and 'operations' in misspell['distance'].keys():
                     id += 1
                     for dist in cols:
                         if dist in misspell['distance'].keys() and id < 2:
@@ -124,8 +118,10 @@ def create_data_for_v_a_simulation(correct_user_name: str, data_frame: pd.DataFr
 
 scaler = StandardScaler()
 
+n_gram_size = 8
 
-def create_ngrams(data_frame, n_gram_size=8, num_of_vecs_per_user=150):
+
+def create_ngrams(data_frame, n_gram_size=n_gram_size, num_of_vecs_per_user=1000):
     users_original_data, user_n_grams, result_X, result_Y = {}, {}, [], []
     for lab in data_frame['user_label'].unique():
         users_original_data[lab] = data_frame[data_frame['user_label'] == lab]
@@ -133,7 +129,6 @@ def create_ngrams(data_frame, n_gram_size=8, num_of_vecs_per_user=150):
     for u_id in users_original_data.keys():
         user_n_grams[u_id] = np.array(
             random.sample(list(combinations(users_original_data[u_id], n_gram_size)), num_of_vecs_per_user))
-        # result_X[u_id] = []
         for vec_id in range(len(user_n_grams[u_id])):
             result_X.append(user_n_grams[u_id][vec_id].flatten())
         for _ in range(num_of_vecs_per_user):
@@ -166,11 +161,11 @@ cols = [
     'pos_tag_corrected',
     'user_label']
 
-
+df = load_data(directory)
 df = load_data(directory)[cols]
 
 
-X, y = create_ngrams(df)
+X, y = create_ngrams(df, n_gram_size)
 
 y = np.array(y)
 

@@ -127,8 +127,6 @@ def get_string_oprations(word_1, word_2, is_damerau=True):
     return operations_list
 
 
-
-
 class Distances:
     lev_thresholds = {'short_word': (4, 0.3), 'longer_words': (5, 0.6)}
     examples = {}
