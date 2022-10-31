@@ -5,11 +5,12 @@ import os
 from json import load
 import numpy as np
 from itertools import combinations
+from sklearn.feature_selection import SelectKBest, f_classif
+
 
 # assign ids to pos_tags
 pos_tags = ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NN', 'NNP', 'NNPS', 'NNS', 'PDT',
-            'POS',
-            'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT',
+            'POS', 'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT',
             'WP', 'WP$', 'WRB']
 tmp = {}
 i = 0
@@ -25,8 +26,14 @@ file_pth = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files\\done_miki.
 
 # define users and columns to read
 user_names = {}
+number_of_features = 10
+program_n_gram_size = 4
+program_test_size_per_user = 10
+program_num_of_vecs_per_user = 1000
 
-is_ver_sim = False
+# program_is_ver_sim = False
+program_is_ver_sim = True
+
 
 # load data
 def read_json_file(path_to_file):
@@ -116,25 +123,15 @@ def create_data_for_v_a_simulation(correct_user_name: str, data_frame: pd.DataFr
     del user_data
     return data_frame, sample
 
+
 scaler = StandardScaler()
 
-n_gram_size = 8
 
-
-def create_ngrams(data_frame, n_gram_size=n_gram_size, num_of_vecs_per_user=1000):
-    users_original_data, user_n_grams, result_X, result_Y = {}, {}, [], []
-    for lab in data_frame['user_label'].unique():
-        users_original_data[lab] = data_frame[data_frame['user_label'] == lab]
-        users_original_data[lab] = scaler.fit_transform(users_original_data[lab].iloc[:, :-1])
-    for u_id in users_original_data.keys():
-        user_n_grams[u_id] = np.array(
-            random.sample(list(combinations(users_original_data[u_id], n_gram_size)), num_of_vecs_per_user))
-        for vec_id in range(len(user_n_grams[u_id])):
-            result_X.append(user_n_grams[u_id][vec_id].flatten())
-        for _ in range(num_of_vecs_per_user):
-            result_Y.append(u_id)
-    del user_n_grams
-    return result_X, result_Y
+def choose_features(number_of_features, X, y):
+    selector = SelectKBest(f_classif, k=number_of_features)
+    X = selector.fit_transform(X, y)
+    f_score_column_indexes = (-selector.scores_).argsort()[:number_of_features]  # choosen featuers indexes
+    return X, sorted(f_score_column_indexes)
 
 
 cols = [
@@ -161,107 +158,56 @@ cols = [
     'pos_tag_corrected',
     'user_label']
 
+
+def create_ngrams(data_frame, test_size_per_user=10, n_gram_size=5, num_of_vecs_per_user=5000,
+                  separate_words=program_is_ver_sim, number_of_features = 4):
+    users_original_data, user_n_grams, result_X, result_Y, = {}, {}, [], []
+    tmp_X, tmp_y = np.array([]), []
+    for lab in data_frame['user_label'].unique():
+        users_original_data[lab] = data_frame[data_frame['user_label'] == lab]
+        users_original_data[lab] = scaler.fit_transform(users_original_data[lab].iloc[:, :-1])
+        tmp_X = np.append(tmp_X, users_original_data[lab])
+        tmp_y = tmp_y + [lab for _ in range(len(users_original_data[lab]))]
+    tmp_y = np.array(tmp_y)
+    tmp_X = tmp_X.reshape((tmp_y.shape[0], tmp_X.shape[0]//tmp_y.shape[0]))
+    tmp_X, features_cols = choose_features(number_of_features, tmp_X, tmp_y)
+    for lab in data_frame['user_label'].unique():
+        users_original_data[lab] = users_original_data[lab][:, features_cols]
+    if separate_words:
+        original_test_x_data, user_test_n_grams, test_x, test_y = {}, {}, [], []
+
+        # create other group of data to test
+        for lab in users_original_data:
+            idx = np.random.randint(users_original_data[lab].shape[0], size=test_size_per_user)
+            original_test_x_data[lab] = users_original_data[lab][idx, :]
+            users_original_data[lab] = np.delete(users_original_data[lab], idx, axis=0)
+
+    for u_id in users_original_data.keys():
+        user_n_grams[u_id] = np.array(
+            random.sample(list(combinations(users_original_data[u_id], n_gram_size)), num_of_vecs_per_user))
+        for vec_id in range(len(user_n_grams[u_id])):
+            result_X.append(user_n_grams[u_id][vec_id].flatten())
+        for _ in range(num_of_vecs_per_user):
+            result_Y.append(u_id)
+    if separate_words:
+        for u_id in original_test_x_data.keys():
+            original_test_x_data[u_id] = np.array(list(combinations(original_test_x_data[u_id], n_gram_size)))
+            for vec_id in range(len(original_test_x_data[u_id])):
+                test_x.append(original_test_x_data[u_id][vec_id].flatten())
+            for _ in range(original_test_x_data[u_id].shape[0]):
+                test_y.append(u_id)
+        return np.array(result_X), np.array(result_Y), np.array(test_x), np.array(test_y), features_cols
+    return np.array(result_X), np.array(result_Y), features_cols
+
+
+
 df = load_data(directory)
-df = load_data(directory)[cols]
 
-
-X, y = create_ngrams(df, n_gram_size)
-
-y = np.array(y)
-
-X = scaler.fit_transform(X)
-
-# df = df[df.label == 1]
-# df.reindex(df.index, copy=False)
-# print(df)
-# # split data --> create a sample for simulation
-# # standarization
-# scaler = StandardScaler()
-# for lab in df.label.unique():
-#     users_data[lab] = scaler.fit_transform(df.iloc[:, :-1])
-# X = scaler.fit_transform(df.iloc[:, :-1])
-#
-# # define X and y
-# y = df[df.columns[-1]].values
-#
-# print(X)
-# print(5*'\n')
-# print(y)
-
-"""
-
-# choose features
-selector = SelectKBest(f_classif, k=num_of_features)
-X = selector.fit_transform(X, y)
-f_score_column_indexes = (-selector.scores_).argsort()[:num_of_features]  # choosen featuers indexes
-chosen_cols = [cols[k] for k in f_score_column_indexes]
-
-
-# split data
-
-if not is_ver_sim:
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
-    y_test = keras.utils.to_categorical(y_test, num_classes=len(user_names.keys()))
-
-
+if program_is_ver_sim:
+    X, y, X_test, y_test, features_cols = create_ngrams(df, program_test_size_per_user, program_n_gram_size,
+                                         program_num_of_vecs_per_user, program_is_ver_sim)
 else:
-    X_train = X
-    y_train = y
-
-y_train_categorical = keras.utils.to_categorical(y_train, num_classes=len(user_names.keys()))
+    X, y, features_cols = create_ngrams(df, program_test_size_per_user, program_n_gram_size, program_num_of_vecs_per_user,
+                         program_is_ver_sim)
 
 
-
-# # define callbacks
-# logger = tf.keras.callbacks.TensorBoard(log_dir='rocs',
-#                                         write_graph=True,
-#                                         histogram_freq=1)
-# 
-# earlystopping = callbacks.EarlyStopping(monitor='val_loss',
-#                                         mode='min',
-#                                         patience=7,
-#                                         restore_best_weights=True)
-# 
-# # define model
-# 
-# model = tf.keras.Sequential()
-# model.add(tf.keras.layers.Dense(64, activation='relu', name='layer_1', input_dim=num_of_features))
-# model.add(tf.keras.layers.BatchNormalization())
-# model.add(tf.keras.layers.Dropout(0.5))
-# model.add(tf.keras.layers.Dense(32, activation='relu', name='layer_2'))
-# model.add(tf.keras.layers.BatchNormalization())
-# model.add(tf.keras.layers.Dropout(0.5))
-# model.add(tf.keras.layers.Dense(32, activation='relu', name='layer_3'))
-# model.add(tf.keras.layers.BatchNormalization(momentum=0.95,
-#                                              epsilon=0.005,
-#                                              beta_initializer=tf.keras.initializers.RandomNormal(mean=0.0,
-#                                                 stddev=0.05),
-#                                              gamma_initializer=tf.keras.initializers.Constant(value=0.9)
-#                                              ))
-# model.add(tf.keras.layers.Dropout(0.5))
-# model.add(tf.keras.layers.Dense(len(user_names.keys()), activation='softmax', name='output_layer'))
-# 
-# sgd = tf.keras.optimizers.SGD(learning_rate=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-# model.compile(loss='categorical_crossentropy',
-#               optimizer=sgd,
-#               metrics=['accuracy'])
-# 
-# history = model.fit(tf.expand_dims(X_train, axis=-1), y_train, validation_split=0.4, epochs=1000,
-#                         batch_size=128, callbacks=[earlystopping, logger])
-# 
-# model_summary = model.summary()
-# print(model_summary)
-# 
-# if not is_ver_sim:
-#     plot_result(history, "loss")
-#     plot_result(history, "accuracy")
-#     score = model.evaluate(X_test, y_test, batch_size=128)
-#     print(y_test)
-#     print("Score: ", score)
-#     # plot_result("accuracy")
-# else:
-#     sample_X = sample.iloc[:, :-1]
-#     sample_y = sample[sample.columns[-1]].values
-#     prediction = model.predict(sample_X, batch_size=None, verbose=0, steps=None)
-#     print(prediction)
-"""
