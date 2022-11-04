@@ -11,7 +11,7 @@ def read_json_file(path_to_file):
 
 #
 # source_file_dir = 'C:\\Users\\user\\Desktop\\inz_wyniki'
-# dest_file_dir = 'C:\\Users\\user\\PycharmProjects\\bio_system\\tmp'
+# dest_file_dir = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files'
 #
 # for file in os.listdir(source_file_dir):
 #     if file[-4:] == 'json':
@@ -41,8 +41,8 @@ for tag in pos_tags:
     i += 1
 pos_tags = tmp
 del tmp
-# directory = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files'
-directory = 'C:\\Users\\user\\PycharmProjects\\bio_system\\tmp'
+directory = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files'
+# directory = 'C:\\Users\\user\\PycharmProjects\\bio_system\\tmp'
 
 def load_data(files_directory: str) -> pd.DataFrame:
     df = pd.DataFrame()
@@ -183,9 +183,13 @@ def get_misspelled_words_df_from_json(file_path: str, labeled: bool = True, use_
 # print(bartek_get_misspelled_words_df_from_json(directory))
 
 print(get_misspelled_words_df_from_json(directory+'\\done_bartek.json'))
-
-print(load_data(directory))
-
+print(get_misspelled_words_df_from_json(directory+'\\done_babol.json'))
+df = load_data(directory)
+print(df[df['user_label']==0])
+print(df[df['user_label']==1])
+print(df[df['user_label']==2])
+print(df[df['user_label']==3])
+print(df[df['user_label']==4])
 
 
 

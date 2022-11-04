@@ -22,14 +22,14 @@ del tmp
 
 # source_files
 directory = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files\\'
-file_pth = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files\\done_miki.json'
+file_pth = '/tmp/done_miki.json'
 
 # define users and columns to read
 user_names = {}
-number_of_features = 10
-program_n_gram_size = 4
+number_of_features = 5
+program_n_gram_size = 5
 program_test_size_per_user = 10
-program_num_of_vecs_per_user = 1000
+program_num_of_vecs_per_user = 1200
 
 # program_is_ver_sim = False
 program_is_ver_sim = True
@@ -136,11 +136,11 @@ def choose_features(number_of_features, X, y):
 
 cols = [
     # edit ops
-    'damerau_levenshtein_distance',
-    'jaro_winkler_ns',
+    # 'damerau_levenshtein_distance',
+    # 'jaro_winkler_ns',
     # # # # token based
-    'gestalt_ns',
-    'sorensen_dice_ns',
+    # 'gestalt_ns',
+    # 'sorensen_dice_ns',
     'overlap',
     # # # phonetic
     'mra_ns',
@@ -150,10 +150,10 @@ cols = [
     'ml_operation_subtype_id',
     'ml_det0',
     'ml_det1',
-    'ml_det2',
-    'ml_det3',
-    'ml_det4',
-    'ml_det5',
+    # 'ml_det2',
+    # 'ml_det3',
+    # 'ml_det4',
+    # 'ml_det5',
     'pos_tag_org',
     'pos_tag_corrected',
     'user_label']
@@ -201,11 +201,11 @@ def create_ngrams(data_frame, test_size_per_user=10, n_gram_size=5, num_of_vecs_
 
 
 
-df = load_data(directory)
+df = load_data(directory)[cols]
 
 if program_is_ver_sim:
     X, y, X_test, y_test, features_cols = create_ngrams(df, program_test_size_per_user, program_n_gram_size,
-                                         program_num_of_vecs_per_user, program_is_ver_sim)
+                                         program_num_of_vecs_per_user, program_is_ver_sim, number_of_features=number_of_features)
 else:
     X, y, features_cols = create_ngrams(df, program_test_size_per_user, program_n_gram_size, program_num_of_vecs_per_user,
                          program_is_ver_sim)

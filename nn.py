@@ -5,6 +5,9 @@ from keras import callbacks
 from create_model import X, y, user_names, program_n_gram_size, program_is_ver_sim, features_cols
 from draw_results import draw_roc_curve, plot_result_nn, get_info_readme
 from os import path, makedirs
+from tensorflow import config
+
+print(config.list_physical_devices('GPU'))
 
 if program_is_ver_sim:
     X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.2, random_state=0)
