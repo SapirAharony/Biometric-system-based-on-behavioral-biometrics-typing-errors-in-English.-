@@ -1,18 +1,43 @@
 import system_features_extractor, os
 from json import load
+from itertools import combinations
+from iteration_utilities import random_combination
+
+# cntr = 0
+tmp = set()
+while len(tmp) < 100:
+    tmp.add(random_combination(range(100), 5))
+
+
+for p in range(1000):
+    for i in range(1000):
+        while len(tmp) < 100:
+            tmp.add(random_combination(range(100), 5))
+        if len(tmp) != 100:
+            print(len(tmp), "ERRRRRRRRRRRRRRRROOOOOOOOOOOOOOOOOOOOOOOORRRRRRRRRRRRRRRRRRRRRRRRR")
+
+
+#         tmp = set()
+#         for k in range(100):
+#             tmp.add(random_combination(range(100), 5))
+#         if len(tmp) != 100:
+#             cntr += 1
+#             print(len(tmp), "ERRRRRRRRRRRRRRRROOOOOOOOOOOOOOOOOOOOOOOORRRRRRRRRRRRRRRRRRRRRRRRR")
 
 
 ################################## exctract data from original files
+from string_metrics import Distances
+
 
 def read_json_file(path_to_file):
     with open(path_to_file, 'r') as f:
         data = load(f)
     return data
 
-#
-# source_file_dir = 'C:\\Users\\user\\Desktop\\inz_wyniki'
-# dest_file_dir = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files'
-#
+
+source_file_dir = 'C:\\Users\\user\\Desktop\\inz_wyniki'
+dest_file_dir = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files'
+
 # for file in os.listdir(source_file_dir):
 #     if file[-4:] == 'json':
 #         system_features_extractor.extract_data(source_file_dir + '\\' + file, dest_file_dir + '\\done_' + file, file[:-5].capitalize())
@@ -85,6 +110,7 @@ def get_misspelled_words_df_from_json(file_path: str, labeled: bool = True, use_
         if 'misspelled_words' in dictionary.keys() and len(dictionary['misspelled_words']) > 0:
             id = 0
             for misspell in dictionary['misspelled_words']:
+                print(misspell)
                 if use_tags:
                     tags = [pos_tags[misspell['pos_tag']], pos_tags[misspell['corrected_word_tag']]]
                 if 'distance' in misspell.keys() and 'operations' in misspell['distance'].keys():
@@ -106,6 +132,10 @@ def get_misspelled_words_df_from_json(file_path: str, labeled: bool = True, use_
                                                    ignore_index=True)
     if labeled:
         name = read_json_file(file_path)['Name']
+        if user_names.values():
+            print(name, max(user_names.values()) + 1)
+        else:
+            print(name)
         if not user_names:
             user_names[name] = 0
         else:
@@ -182,14 +212,17 @@ def get_misspelled_words_df_from_json(file_path: str, labeled: bool = True, use_
 
 # print(bartek_get_misspelled_words_df_from_json(directory))
 
-print(get_misspelled_words_df_from_json(directory+'\\done_bartek.json'))
-print(get_misspelled_words_df_from_json(directory+'\\done_babol.json'))
+# print(get_misspelled_words_df_from_json(directory+'\\done_bartek.json'))
+# print(get_misspelled_words_df_from_json(directory+'\\done_babol.json'))
 df = load_data(directory)
-print(df[df['user_label']==0])
-print(df[df['user_label']==1])
-print(df[df['user_label']==2])
-print(df[df['user_label']==3])
-print(df[df['user_label']==4])
+for k in user_names.keys():
+    print(k)
+    print(user_names[k], df[df['user_label'] == user_names[k]].reset_index(drop=True))
+
+print(user_names)
+
+print(dir(Distances('bok', 'book').__dict__['operations'][0]))
+print(dir(Distances('bok', 'book')))
 
 
 

@@ -155,14 +155,16 @@ def draw_roc_curve(y_test, y_score, classes, plot_title, file_title):
 def plot_result_nn(history, file_title=None):
     fig, axs = plt.subplots(2, 1)
     x = [k + 1 for k in range(len(history.history["loss"]))]
-    axs[0].plot(x, history.history["val_loss"], label="Validation Data loss",  marker='.')
-    axs[0].plot(x, history.history["loss"], label="Data loss",  marker='.')
+    axs[0].plot(x, history.history["val_loss"], label="Validation data loss",  marker='.')
+    axs[0].plot(x, history.history["loss"], label="Train data loss",  marker='.')
     axs[0].set_title('Train and validation data loss over epochs.', fontsize=10)
     axs[0].set_ylabel('Data loss', fontsize=8)
-    axs[1].plot(x, history.history["val_accuracy"], label="val_accuracy",  marker='.')
-    axs[1].plot(x, history.history["accuracy"], label="accuracy",  marker='.')
+    axs[0].legend(loc="upper right", fontsize=8)
+    axs[1].plot(x, history.history["val_accuracy"], label="Validation accuracy",  marker='.')
+    axs[1].plot(x, history.history["accuracy"], label="Train accuracy",  marker='.')
     axs[1].set_title('Train and validation accuracy over epochs.', fontsize=10)
     axs[1].set_ylabel('Accuracy', fontsize=8)
+    axs[1].legend(loc="upper left", fontsize=8)
 
     for ax in axs.flat:
         ax.set(xlabel='Epochs')

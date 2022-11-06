@@ -1,3 +1,4 @@
+import math
 import random
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
@@ -6,11 +7,12 @@ from json import load
 import numpy as np
 from itertools import combinations
 from sklearn.feature_selection import SelectKBest, f_classif
-
+from iteration_utilities import random_combination
 
 # assign ids to pos_tags
 pos_tags = ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NN', 'NNP', 'NNPS', 'NNS', 'PDT',
-            'POS', 'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT',
+            'POS', 'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ',
+            'WDT',
             'WP', 'WP$', 'WRB']
 tmp = {}
 i = 0
@@ -22,15 +24,10 @@ del tmp
 
 # source_files
 directory = 'C:\\Users\\user\\PycharmProjects\\bio_system\\json_files\\'
-file_pth = '/tmp/done_miki.json'
+file_pth = 'json_files/done_miki.json'
 
 # define users and columns to read
 user_names = {}
-number_of_features = 5
-program_n_gram_size = 5
-program_test_size_per_user = 10
-program_num_of_vecs_per_user = 1200
-
 # program_is_ver_sim = False
 program_is_ver_sim = True
 
@@ -136,11 +133,11 @@ def choose_features(number_of_features, X, y):
 
 cols = [
     # edit ops
-    # 'damerau_levenshtein_distance',
-    # 'jaro_winkler_ns',
-    # # # # token based
-    # 'gestalt_ns',
-    # 'sorensen_dice_ns',
+    'damerau_levenshtein_distance',
+    'jaro_winkler_ns',
+    # # # token based
+    'gestalt_ns',
+    'sorensen_dice_ns',
     'overlap',
     # # # phonetic
     'mra_ns',
@@ -150,29 +147,33 @@ cols = [
     'ml_operation_subtype_id',
     'ml_det0',
     'ml_det1',
-    # 'ml_det2',
-    # 'ml_det3',
-    # 'ml_det4',
-    # 'ml_det5',
+    'ml_det2',
+    'ml_det3',
+    'ml_det4',
+    'ml_det5',
     'pos_tag_org',
     'pos_tag_corrected',
     'user_label']
 
 
 def create_ngrams(data_frame, test_size_per_user=10, n_gram_size=5, num_of_vecs_per_user=5000,
-                  separate_words=program_is_ver_sim, number_of_features = 4):
+                  separate_words=program_is_ver_sim, number_of_features=4):
     users_original_data, user_n_grams, result_X, result_Y, = {}, {}, [], []
     tmp_X, tmp_y = np.array([]), []
+
     for lab in data_frame['user_label'].unique():
         users_original_data[lab] = data_frame[data_frame['user_label'] == lab]
         users_original_data[lab] = scaler.fit_transform(users_original_data[lab].iloc[:, :-1])
         tmp_X = np.append(tmp_X, users_original_data[lab])
         tmp_y = tmp_y + [lab for _ in range(len(users_original_data[lab]))]
+
     tmp_y = np.array(tmp_y)
-    tmp_X = tmp_X.reshape((tmp_y.shape[0], tmp_X.shape[0]//tmp_y.shape[0]))
+    tmp_X = tmp_X.reshape((tmp_y.shape[0], tmp_X.shape[0] // tmp_y.shape[0]))
     tmp_X, features_cols = choose_features(number_of_features, tmp_X, tmp_y)
+    del tmp_y, tmp_X
     for lab in data_frame['user_label'].unique():
         users_original_data[lab] = users_original_data[lab][:, features_cols]
+
     if separate_words:
         original_test_x_data, user_test_n_grams, test_x, test_y = {}, {}, [], []
 
@@ -181,10 +182,14 @@ def create_ngrams(data_frame, test_size_per_user=10, n_gram_size=5, num_of_vecs_
             idx = np.random.randint(users_original_data[lab].shape[0], size=test_size_per_user)
             original_test_x_data[lab] = users_original_data[lab][idx, :]
             users_original_data[lab] = np.delete(users_original_data[lab], idx, axis=0)
-
     for u_id in users_original_data.keys():
-        user_n_grams[u_id] = np.array(
-            random.sample(list(combinations(users_original_data[u_id], n_gram_size)), num_of_vecs_per_user))
+        user_n_grams[u_id] = []
+        tmp_set = set()
+        while len(tmp_set) < num_of_vecs_per_user:
+            tmp_set.add(random_combination(range(len(users_original_data[u_id])), n_gram_size))
+        for n_gram in tmp_set:
+            user_n_grams[u_id].append(np.array([users_original_data[u_id][n_gram_el] for n_gram_el in n_gram]))
+        user_n_grams[u_id] = np.array(user_n_grams[u_id])
         for vec_id in range(len(user_n_grams[u_id])):
             result_X.append(user_n_grams[u_id][vec_id].flatten())
         for _ in range(num_of_vecs_per_user):
@@ -196,13 +201,70 @@ def create_ngrams(data_frame, test_size_per_user=10, n_gram_size=5, num_of_vecs_
                 test_x.append(original_test_x_data[u_id][vec_id].flatten())
             for _ in range(original_test_x_data[u_id].shape[0]):
                 test_y.append(u_id)
+        del users_original_data, user_n_grams,
         return np.array(result_X), np.array(result_Y), np.array(test_x), np.array(test_y), features_cols
+    del users_original_data, user_n_grams
     return np.array(result_X), np.array(result_Y), features_cols
 
 
-
 df = load_data(directory)[cols]
+minimum_words_num = min([df[df['user_label'] == k].reset_index(drop=True).shape[0] for k in df['user_label'].unique()])
+number_of_features = 8
+program_n_gram_size = 7
 
+program_test_size_per_user = int(minimum_words_num * 0.45)
+program_num_of_vecs_per_user = int(minimum_words_num * 0.55)
+
+while program_test_size_per_user + program_num_of_vecs_per_user > minimum_words_num:
+    program_test_size_per_user -= 1
+    program_num_of_vecs_per_user -= 1
+
+test_percentage = math.comb(program_test_size_per_user, program_n_gram_size) / (
+            math.comb(program_num_of_vecs_per_user, program_n_gram_size) + math.comb(program_test_size_per_user,
+                                                                                     program_n_gram_size))
+print(test_percentage)
+
+tmp = True
+if math.comb(program_num_of_vecs_per_user, program_n_gram_size) < 10000:
+    if test_percentage > 0.3:
+        while not (test_percentage > 0.2 and test_percentage < 0.3):
+            if tmp:
+                program_test_size_per_user -= 1
+                tmp = False
+            else:
+                program_num_of_vecs_per_user -= 1
+                tmp = True
+            test_percentage = math.comb(program_test_size_per_user, program_n_gram_size) / (
+                    math.comb(program_num_of_vecs_per_user, program_n_gram_size) + math.comb(program_test_size_per_user,
+                                                                                             program_n_gram_size))
+    elif test_percentage < 0.2:
+        while (not (test_percentage > 0.2 and test_percentage < 0.3)) and \
+                program_test_size_per_user + program_num_of_vecs_per_user < minimum_words_num:
+            if program_test_size_per_user + program_num_of_vecs_per_user < 0.8 * (program_num_of_vecs_per_user):
+                if tmp:
+                    program_test_size_per_user += 1
+                    tmp = False
+                else:
+                    program_num_of_vecs_per_user += 1
+                    tmp = True
+                print('2.1')
+            else:
+                program_num_of_vecs_per_user -= 1
+                print('2.2')
+            test_percentage = math.comb(program_test_size_per_user, program_n_gram_size) / (
+                    math.comb(program_num_of_vecs_per_user, program_n_gram_size) + math.comb(
+                program_test_size_per_user,
+                program_n_gram_size))
+else:
+    program_test_size_per_user = 20
+    program_num_of_vecs_per_user = 10000
+    while not (math.comb(program_test_size_per_user, program_n_gram_size) > 0.2* program_num_of_vecs_per_user and math.comb(program_test_size_per_user, program_n_gram_size) < 0.35*program_num_of_vecs_per_user):
+        if math.comb(program_test_size_per_user, program_n_gram_size) > program_num_of_vecs_per_user:
+            program_test_size_per_user -= 5
+        else:
+            program_test_size_per_user += 1
+
+create_ngrams(df, program_test_size_per_user, program_n_gram_size, program_num_of_vecs_per_user, program_is_ver_sim)
 if program_is_ver_sim:
     X, y, X_test, y_test, features_cols = create_ngrams(df, program_test_size_per_user, program_n_gram_size,
                                          program_num_of_vecs_per_user, program_is_ver_sim, number_of_features=number_of_features)
@@ -211,3 +273,6 @@ else:
                          program_is_ver_sim)
 
 
+del df
+del scaler
+del pos_tags

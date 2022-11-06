@@ -1,4 +1,3 @@
-import keras.utils
 from tensorflow import expand_dims, keras
 from sklearn.model_selection import train_test_split
 from keras import callbacks
@@ -29,13 +28,13 @@ print(y_test.shape)
 
 logger = keras.callbacks.TensorBoard(log_dir='logs', write_graph=True, histogram_freq=1, )
 model = keras.Sequential()
-model.add(keras.layers.Dense(128, activation='relu', name='layer_1', input_dim=X_train.shape[1]))
+model.add(keras.layers.Dense(256, activation='relu', name='layer_1', input_dim=X_train.shape[1]))
 model.add(keras.layers.BatchNormalization())
 model.add(keras.layers.Dropout(0.5))
 model.add(keras.layers.Dense(128, activation='relu', name='layer_2'))
 model.add(keras.layers.BatchNormalization())
 model.add(keras.layers.Dropout(0.5))
-model.add(keras.layers.Dense(128, activation='relu', name='layer_3'))
+model.add(keras.layers.Dense(256, activation='relu', name='layer_3'))
 model.add(keras.layers.BatchNormalization(momentum=0.95, epsilon=0.005,
                                           beta_initializer=keras.initializers.RandomNormal(mean=0.0, stddev=0.05),
                                           gamma_initializer=keras.initializers.Constant(value=0.9)))
