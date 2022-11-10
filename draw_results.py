@@ -1,17 +1,11 @@
-from sklearn.metrics import roc_curve, auc
-from itertools import cycle
-import matplotlib.pyplot as plt
-import numpy as np
-from create_model import features_cols, cols
-from matplotlib.widgets import TextBox
-
-from sklearn.metrics import roc_curve, auc
+from create_model import cols
+from sklearn.metrics import roc_curve, auc, confusion_matrix, ConfusionMatrixDisplay
 from itertools import cycle
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-def draw_roc_curve(y_test, y_score, classes, plot_title, file_title):
+def draw_roc_curve(y_test, y_score, classes, plot_title, file_title=None, print_classes=True):
     lw = 2
     n_classes = len(classes)
     fpr, tpr, roc_auc = {}, {}, {}
@@ -57,17 +51,19 @@ def draw_roc_curve(y_test, y_score, classes, plot_title, file_title):
         linestyle=":",
         linewidth=4,
     )
+    if print_classes:
+        colors = cycle(["aqua", "darkorange", "cornflowerblue", 'b', 'g', 'c', 'r', 'm', 'y', 'k'])
+        for i, color in zip(range(n_classes), colors):
+            plt.plot(
+                fpr[i],
+                tpr[i],
+                color=color,
+                lw=lw,
+                label="ROC curve of class {0} (area = {1:0.2f})".format(
+                    [name for name, id in classes.items() if id == i][0], roc_auc[i]),
+                # label="ROC curve of class {0} (area = {1:0.2f})".format(i, roc_auc[i]),
+            )
 
-    colors = cycle(["aqua", "darkorange", "cornflowerblue", 'b', 'g', 'c', 'r', 'm', 'y', 'k'])
-    for i, color in zip(range(n_classes), colors):
-        plt.plot(
-            fpr[i],
-            tpr[i],
-            color=color,
-            lw=lw,
-            label="ROC curve of class {0} (area = {1:0.2f})".format([name for name, id in classes.items() if id == i][0], roc_auc[i]),
-            # label="ROC curve of class {0} (area = {1:0.2f})".format(i, roc_auc[i]),
-        )
 
     plt.plot([0, 1], [0, 1], "k--", lw=lw)
     plt.xlim([0.0, 1.0])
@@ -77,7 +73,10 @@ def draw_roc_curve(y_test, y_score, classes, plot_title, file_title):
     plt.title(plot_title, fontdict={'size': 10})
     plt.legend(loc="lower right")
     plt.legend(loc="lower right", fontsize=8)
-    plt.savefig(file_title)
+    if file_title is not None:
+        plt.savefig(file_title)
+    else:
+        plt.show()
 
 # def draw_roc_curve(y_test, pred, classes, plot_title, file_title):
 #     lw = 2
@@ -164,7 +163,8 @@ def plot_result_nn(history, file_title=None):
     axs[1].plot(x, history.history["accuracy"], label="Train accuracy",  marker='.')
     axs[1].set_title('Train and validation accuracy over epochs.', fontsize=10)
     axs[1].set_ylabel('Accuracy', fontsize=8)
-    axs[1].legend(loc="upper left", fontsize=8)
+    axs[1].legend(loc="lower right", fontsize=8)
+
 
     for ax in axs.flat:
         ax.set(xlabel='Epochs')
@@ -183,3 +183,18 @@ def get_info_readme(list_of_features):
     for id in list_of_features:
         infos = infos + '\n' + cols[id]
     return infos
+
+
+def plot_confusion_metrics(y_test, y_pred, labels: list, display_labels: list, file_title=None):
+    system_confusion_matrix = confusion_matrix(np.argmax(y_test, axis=1), np.argmax(y_pred, axis=1),
+                                               labels=labels)
+    cm_display = ConfusionMatrixDisplay(system_confusion_matrix, display_labels=display_labels)
+    fig, ax = plt.subplots(figsize=(10,10))
+    cm_display.plot(cmap="RdYlGn", ax=ax)
+    if file_title is not None:
+        plt.savefig(file_title)
+    else:
+        plt.show()
+
+
+
