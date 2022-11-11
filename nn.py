@@ -2,7 +2,7 @@ from tensorflow import expand_dims, keras
 from sklearn.model_selection import train_test_split
 from keras import callbacks
 from create_model import X, y, user_names, program_n_gram_size, program_is_ver_sim, features_cols
-from draw_results import draw_roc_curve, plot_result_nn, get_info_readme, plot_confusion_metrics
+from draw_results import draw_roc_curve, plot_result_nn, get_info_readme, plot_confusion_metrics, hipotese_tests
 from os import path, makedirs
 from tensorflow import config
 import numpy as np
@@ -23,7 +23,7 @@ y_valid = keras.utils.to_categorical(y_valid, num_classes=len(user_names.keys())
 print(X_train.shape)
 print(X_valid.shape)
 print(X_test.shape)
-print(X_test.shape[0] / X_train.shape[0] * 100)
+print(X_test.shape[0] / (X_test.shape[0] + X_train.shape[0]) * 100)
 print(y_train.shape)
 print(y_valid.shape)
 print(y_test.shape)
@@ -31,13 +31,16 @@ print(y_test.shape[0] / y_train.shape[0] * 100)
 
 logger = keras.callbacks.TensorBoard(log_dir='logs', write_graph=True, histogram_freq=1, )
 model = keras.Sequential()
-model.add(keras.layers.Dense(64, activation='relu', name='layer_1', input_dim=X_train.shape[1]))
+model.add(keras.layers.Dense(128, activation='relu', name='layer_1', input_dim=X_train.shape[1]))
 model.add(keras.layers.BatchNormalization())
 model.add(keras.layers.Dropout(0.5))
-model.add(keras.layers.Dense(128, activation='relu', name='layer_2'))
+model.add(keras.layers.Dense(64, activation='relu', name='layer_2'))
 model.add(keras.layers.BatchNormalization())
 model.add(keras.layers.Dropout(0.5))
-model.add(keras.layers.Dense(64, activation='relu', name='layer_3'))
+model.add(keras.layers.Dense(32, activation='relu', name='layer_3'))
+model.add(keras.layers.BatchNormalization())
+model.add(keras.layers.Dropout(0.5))
+model.add(keras.layers.Dense(16, activation='relu', name='layer_4'))
 model.add(keras.layers.BatchNormalization(momentum=0.95, epsilon=0.005,
                                           beta_initializer=keras.initializers.RandomNormal(mean=0.0, stddev=0.05),
                                           gamma_initializer=keras.initializers.Constant(value=0.9)))
@@ -79,27 +82,38 @@ if not path.exists(directory):
 plot_result_nn(history, file_title=directory + '\\data_loss' + file_title)
 draw_roc_curve(y_test, pred, plot_title=title, classes=user_names, file_title=directory + '\\roc_curve_' + file_title)
 plot_confusion_metrics(y_test, pred, list(sorted(user_names.values())),
-                       list(dict(sorted(user_names.items(), key=lambda item: item[1])).keys()))
+                       list(dict(sorted(user_names.items(), key=lambda item: item[1])).keys()),
+                       file_title=directory + '\\cm' + file_title)
+
+tn, fp, fn, tp = hipotese_tests(np.argmax(y_test, axis=1), np.argmax(pred, axis=1))
+
+
 
 with open(directory + '\\readme.txt', 'a+') as f:
     f.truncate(0)
     f.write("Features: " + get_info_readme(features_cols))
-    f.write(3 * "\n")
-    f.write("X_train: " + str(X_train.shape[0]) + "(" + str(
-        X_train.shape[0] / (X_train.shape[0] + X_valid.shape[0] + X_test.shape[0])))
-    f.write("\nX_valid: " + str(X_valid.shape[0]) + "(" + str(
-        X_valid.shape[0] / (X_train.shape[0] + X_valid.shape[0] + X_test.shape[0])))
-    f.write("\nX_test: " + str(X_test.shape[0]) + "(" + str(
-        X_test.shape[0] / (X_train.shape[0] + X_valid.shape[0] + X_test.shape[0])))
+    f.write(2 * "\n")
+    f.write("X_train: " + str(X_train.shape[0]) + "(" + str(100*
+        X_train.shape[0] / (X_train.shape[0] + X_valid.shape[0] + X_test.shape[0]))+ "%)" )
+    f.write("\nX_valid: " + str(X_valid.shape[0]) + "(" + str(100*
+        X_valid.shape[0] / (X_train.shape[0] + X_valid.shape[0] + X_test.shape[0]))+ "%)" )
+    f.write("\nX_test: " + str(X_test.shape[0]) + "(" + str(100* X_test.shape[0] / (X_train.shape[0] + X_valid.shape[0] + X_test.shape[0]))+ "%)" )
+    f.write(2 * "\n")
+    f.write("\nTP: " + str(tp))
+    f.write("\nTN: " + str(tn))
+    f.write("\nFP: " + str(fp))
+    f.write("\nFN: " + str(fn))
+    f.write(2 * "\n")
+    f.write("\nFail to enrol: " + str(len(pred_rejected)) + "(" + str(100*len(pred_rejected)/(len(pred_rejected) + pred.shape[0])) +"%)")
 
-with open(directory + '\\pred.txt', 'a+') as f:
-    f.truncate(0)
-    for prediction in pred:
-        f.write(str(prediction) + ",")
-
-with open(directory + '\\y_test.txt', 'a+') as f:
-    f.truncate(0)
-    for y in y_test:
-        f.write(str(y) + ",")
+# with open(directory + '\\pred.txt', 'a+') as f:
+#     f.truncate(0)
+#     for prediction in pred:
+#         f.write(str(prediction) + ",")
+#
+# with open(directory + '\\y_test.txt', 'a+') as f:
+#     f.truncate(0)
+#     for y in y_test:
+#         f.write(str(y) + ",")
 
 model.save(directory + '\\my_model')

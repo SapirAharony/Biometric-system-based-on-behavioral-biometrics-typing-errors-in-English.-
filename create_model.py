@@ -1,4 +1,5 @@
 import math
+import random
 import sys
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
@@ -156,8 +157,9 @@ cols = [
     'user_label']
 
 
-def create_ngrams(data_frame, test_size_per_user=10, n_gram_size=5, num_of_vecs_per_user=5000,
-                  separate_words=program_is_ver_sim, number_of_features=4):
+def create_ngrams(data_frame: pd.DataFrame, test_size_per_user: int = 10, n_gram_size: int = 5,
+                  vecs_size_per_user: int = 30,
+                  separate_words: bool = program_is_ver_sim, number_of_features: int = 4):
     users_original_data, user_n_grams, result_X, result_Y, = {}, {}, [], []
     tmp_X, tmp_y = np.array([]), []
 
@@ -182,6 +184,7 @@ def create_ngrams(data_frame, test_size_per_user=10, n_gram_size=5, num_of_vecs_
             idx = np.random.randint(users_original_data[lab].shape[0], size=test_size_per_user)
             original_test_x_data[lab] = users_original_data[lab][idx, :]
             users_original_data[lab] = np.delete(users_original_data[lab], idx, axis=0)
+    num_of_vecs_per_user = math.comb(vecs_size_per_user, program_n_gram_size)
     for u_id in users_original_data.keys():
         user_n_grams[u_id] = []
         tmp_set = set()
@@ -208,14 +211,15 @@ def create_ngrams(data_frame, test_size_per_user=10, n_gram_size=5, num_of_vecs_
 
 
 df = load_data(directory)[cols]
-minimum_words_num = min([df[df['user_label'] == k].reset_index(drop=True).shape[0] for k in df['user_label'].unique()])
-number_of_features = 6
+minimum_words_num = min ([df[df['user_label'] == k].reset_index(drop=True).shape[0] for k in df['user_label'].unique()])
+number_of_features = 5
 
 program_n_gram_size = 6
 
-program_test_size_per_user = int(minimum_words_num * 0.45)
-program_num_of_vecs_per_user = int(minimum_words_num * 0.55)
-
+# program_test_size_per_user = int(minimum_words_num * 0.35)
+# program_num_of_vecs_per_user = int(minimum_words_num * 0.45)
+program_test_size_per_user = int(minimum_words_num * 0.25)
+program_num_of_vecs_per_user = int(minimum_words_num * 0.35)
 # while program_test_size_per_user + program_num_of_vecs_per_user > minimum_words_num:
 #     program_test_size_per_user -= 1
 #     program_num_of_vecs_per_user -= 1
@@ -267,17 +271,24 @@ program_num_of_vecs_per_user = int(minimum_words_num * 0.55)
 
 print("Creating n-grams")
 
-
-program_test_size_per_user = 18
-program_num_of_vecs_per_user = 16000
-
-
 if program_is_ver_sim:
     X, y, X_test, y_test, features_cols = create_ngrams(df, program_test_size_per_user, program_n_gram_size,
-                                         program_num_of_vecs_per_user, program_is_ver_sim, number_of_features=number_of_features)
+                                                        program_num_of_vecs_per_user, program_is_ver_sim,
+                                                        number_of_features=number_of_features)
 else:
-    X, y, features_cols = create_ngrams(df, program_test_size_per_user, program_n_gram_size, program_num_of_vecs_per_user,
-                         program_is_ver_sim)
+    X, y, features_cols = create_ngrams(df, program_test_size_per_user, program_n_gram_size,
+                                        program_num_of_vecs_per_user,
+                                        program_is_ver_sim)
+
+if X.shape[0] / (X_test.shape[0] + X.shape[0]) < 0.75:
+    idxs = np.random.choice(X_test.shape[0], abs(X_test.shape[0] - X.shape[0] // 4))
+    X_test = np.delete(X_test, idxs, 0)
+    y_test = np.delete(y_test, idxs, 0)
+elif X.shape[0] / (X_test.shape[0] + X.shape[0]) > 0.75:
+    idxs = np.random.choice(X_test.shape[0], abs(3*X_test.shape[0] - X.shape[0]))
+    X = np.delete(X, idxs, 0)
+    y = np.delete(y, idxs, 0)
+
 
 
 del df

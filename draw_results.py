@@ -3,6 +3,7 @@ from sklearn.metrics import roc_curve, auc, confusion_matrix, ConfusionMatrixDis
 from itertools import cycle
 import matplotlib.pyplot as plt
 import numpy as np
+from keras.metrics import TruePositives, TrueNegatives, FalseNegatives, FalsePositives
 
 
 def draw_roc_curve(y_test, y_score, classes, plot_title, file_title=None, print_classes=True):
@@ -196,5 +197,60 @@ def plot_confusion_metrics(y_test, y_pred, labels: list, display_labels: list, f
     else:
         plt.show()
 
+def hipotese_tests(true_y, pred_y):
+    tp = TruePositives()
+    tp.update_state(true_y, pred_y)
+    tp = tp.result().numpy()
+
+    tn = TrueNegatives()
+    tn.update_state(true_y, pred_y)
+    tn = tn.result().numpy()
+
+    fp = FalsePositives()
+    fp.update_state(true_y, pred_y)
+    fp = fp.result().numpy()
+
+    fn = FalseNegatives()
+    fn.update_state(true_y, pred_y)
+    fn = fn.result().numpy()
+
+    return tn, fp, fn, tp
+
+
+def find_EER(far, frr):
+    x = np.absolute((np.array(far) - np.array(frr)))
+
+    y = np.nanargmin(x)
+    # print("index of min difference=", y)
+    far_optimum = far[y]
+    frr_optimum = frr[y]
+    return (np.nanargmin(x), max(far_optimum, frr_optimum))
+
+
+def draw_far_frr (y_test, y_pred, file_title=None):
+    frr, far = [], []
+    bins = 100
+    threshold = [k/bins for k in range(bins+1)]
+    for thresh in threshold:
+        far_counter, frr_counter = 0,0
+        for k in range(y_pred.shape[0]):
+            y_prediction, true = y_pred[k], y_test[k]
+            if y_prediction.max() > thresh and np.argmax(y_prediction) != np.argmax(true):
+                far_counter += 1
+            if y_prediction.max() < thresh and np.argmax(y_prediction) == np.argmax(true):
+                frr_counter += 1
+        far.append(far_counter/y_pred.shape[0])
+        frr.append(frr_counter/y_pred.shape[0])
+    eer = find_EER(far, frr)
+    fig, ax = plt.subplots()
+    ax.plot(threshold, far, 'r--', label='FAR')
+    ax.plot(threshold, frr, 'g--', label='FRR')
+    plt.xlabel('Threshold')
+    plt.plot(eer[0]/bins, eer[1], 'ro', label='EER')
+    ax.legend(loc='upper center', shadow=True, fontsize='x-large')
+    if file_title is not None:
+        plt.savefig(file_title)
+    else:
+        plt.show()
 
 
