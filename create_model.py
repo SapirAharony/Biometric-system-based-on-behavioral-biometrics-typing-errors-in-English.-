@@ -212,83 +212,32 @@ def create_ngrams(data_frame: pd.DataFrame, test_size_per_user: int = 10, n_gram
 
 df = load_data(directory)[cols]
 minimum_words_num = min ([df[df['user_label'] == k].reset_index(drop=True).shape[0] for k in df['user_label'].unique()])
-number_of_features = 5
+number_of_features = 7
 
-program_n_gram_size = 6
+program_n_gram_size = 4
 
-# program_test_size_per_user = int(minimum_words_num * 0.35)
-# program_num_of_vecs_per_user = int(minimum_words_num * 0.45)
-program_test_size_per_user = int(minimum_words_num * 0.25)
-program_num_of_vecs_per_user = int(minimum_words_num * 0.35)
-# while program_test_size_per_user + program_num_of_vecs_per_user > minimum_words_num:
-#     program_test_size_per_user -= 1
-#     program_num_of_vecs_per_user -= 1
-#
-# test_percentage = math.comb(program_test_size_per_user, program_n_gram_size) / (
-#             math.comb(program_num_of_vecs_per_user, program_n_gram_size) + math.comb(program_test_size_per_user,
-#                                                                                      program_n_gram_size))
-#
-# tmp = True
-# if math.comb(program_num_of_vecs_per_user, program_n_gram_size) < 10000:
-#     if test_percentage > 0.3:
-#         while not (test_percentage > 0.2 and test_percentage < 0.3):
-#             if tmp:
-#                 program_test_size_per_user -= 1
-#                 tmp = False
-#             else:
-#                 program_num_of_vecs_per_user -= 1
-#                 tmp = True
-#             test_percentage = math.comb(program_test_size_per_user, program_n_gram_size) / (
-#                     math.comb(program_num_of_vecs_per_user, program_n_gram_size) + math.comb(program_test_size_per_user,
-#                                                                                              program_n_gram_size))
-#     elif test_percentage < 0.2:
-#         while (not (test_percentage > 0.2 and test_percentage < 0.3)) and \
-#                 program_test_size_per_user + program_num_of_vecs_per_user < minimum_words_num:
-#             if program_test_size_per_user + program_num_of_vecs_per_user < 0.8 * (program_num_of_vecs_per_user):
-#                 if tmp:
-#                     program_test_size_per_user += 1
-#                     tmp = False
-#                 else:
-#                     program_num_of_vecs_per_user += 1
-#                     tmp = True
-#                 print('2.1')
-#             else:
-#                 program_num_of_vecs_per_user -= 1
-#                 print('2.2')
-#             test_percentage = math.comb(program_test_size_per_user, program_n_gram_size) / (
-#                     math.comb(program_num_of_vecs_per_user, program_n_gram_size) + math.comb(
-#                 program_test_size_per_user,
-#                 program_n_gram_size))
-# else:
-#     program_test_size_per_user = 17
-#     print('math.comb(program_test_size_per_user, program_n_gram_size)',math.comb(program_test_size_per_user, program_n_gram_size))
-#     program_num_of_vecs_per_user = 95000
-#     while not (math.comb(program_test_size_per_user, program_n_gram_size) > 0.2* program_num_of_vecs_per_user and math.comb(program_test_size_per_user, program_n_gram_size) < 0.35*program_num_of_vecs_per_user):
-#         if math.comb(program_test_size_per_user, program_n_gram_size) > program_num_of_vecs_per_user:
-#             program_test_size_per_user -= 1
-#         else:
-#             program_test_size_per_user += 1
-
-print("Creating n-grams")
+program_test_size_per_user = int(minimum_words_num * 0.3)
+program_num_of_vecs_per_user = int(minimum_words_num * 0.45)
 
 if program_is_ver_sim:
     X, y, X_test, y_test, features_cols = create_ngrams(df, program_test_size_per_user, program_n_gram_size,
                                                         program_num_of_vecs_per_user, program_is_ver_sim,
                                                         number_of_features=number_of_features)
+
 else:
     X, y, features_cols = create_ngrams(df, program_test_size_per_user, program_n_gram_size,
                                         program_num_of_vecs_per_user,
                                         program_is_ver_sim)
 
-if X.shape[0] / (X_test.shape[0] + X.shape[0]) < 0.75:
-    idxs = np.random.choice(X_test.shape[0], abs(X_test.shape[0] - X.shape[0] // 4))
+if X.shape[0] / (X_test.shape[0] + X.shape[0]) < 0.70:
+
+    idxs = np.random.choice(X_test.shape[0], abs(X_test.shape[0] - X.shape[0] // 5), replace=False)
     X_test = np.delete(X_test, idxs, 0)
     y_test = np.delete(y_test, idxs, 0)
-elif X.shape[0] / (X_test.shape[0] + X.shape[0]) > 0.75:
-    idxs = np.random.choice(X_test.shape[0], abs(3*X_test.shape[0] - X.shape[0]))
+elif X.shape[0] / (X_test.shape[0] + X.shape[0]) > 0.8:
+    idxs = np.random.choice(X.shape[0], abs(4*X_test.shape[0] - X.shape[0]), replace=False)
     X = np.delete(X, idxs, 0)
     y = np.delete(y, idxs, 0)
-
 
 
 del df

@@ -6,7 +6,8 @@ import numpy as np
 from keras.metrics import TruePositives, TrueNegatives, FalseNegatives, FalsePositives
 
 
-def draw_roc_curve(y_test, y_score, classes, plot_title, file_title=None, print_classes=True):
+def draw_classes_roc_curve(y_test, y_score, classes, plot_title, file_title=None, print_classes=True,
+                           print_micro_macro=True):
     lw = 2
     n_classes = len(classes)
     fpr, tpr, roc_auc = {}, {}, {}
@@ -20,51 +21,53 @@ def draw_roc_curve(y_test, y_score, classes, plot_title, file_title=None, print_
     mean_tpr = np.zeros_like(all_fpr)
     for i in range(n_classes):
         mean_tpr += np.interp(all_fpr, fpr[i], tpr[i])
-
-
-    # Compute micro-average ROC curve and ROC area
-    fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_score.ravel())
-    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
-    # Finally average it and compute AUC
-    mean_tpr /= n_classes
-
-    fpr["macro"] = all_fpr
-    tpr["macro"] = mean_tpr
-    roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
-
-    # Plot all ROC curves
     plt.clf()
     plt.figure(figsize=(8, 6))
-    plt.plot(
-        fpr["micro"],
-        tpr["micro"],
-        label="micro-average ROC curve (area = {0:0.2f})".format(roc_auc["micro"]),
-        color="deeppink",
-        linestyle=":",
-        linewidth=4,
-    )
+    if print_micro_macro:
+        fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_score.ravel())
+        roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+        # Finally average it and compute AUC
+        mean_tpr /= n_classes
 
-    plt.plot(
-        fpr["macro"],
-        tpr["macro"],
-        label="macro-average ROC curve (area = {0:0.2f})".format(roc_auc["macro"]),
-        color="navy",
-        linestyle=":",
-        linewidth=4,
-    )
+        fpr["macro"] = all_fpr
+        tpr["macro"] = mean_tpr
+        roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
+        plt.plot(
+            fpr["micro"],
+            tpr["micro"],
+            label="micro-average ROC curve (area = {0:0.2f})".format(roc_auc["micro"]),
+            color="deeppink",
+            linestyle=":",
+            linewidth=4,
+        )
+
+        plt.plot(
+            fpr["macro"],
+            tpr["macro"],
+            label="macro-average ROC curve (area = {0:0.2f})".format(roc_auc["macro"]),
+            color="navy",
+            linestyle=":",
+            linewidth=4,
+        )
+    # Compute micro-average ROC curve and ROC area
+
+    # Plot all ROC curves
+
     if print_classes:
-        colors = cycle(["aqua", "darkorange", "cornflowerblue", 'b', 'g', 'c', 'r', 'm', 'y', 'k'])
+        colors = cycle(
+            ["aqua", "midnightblue", "darkorange", 'black', "slategray", 'lightpink', 'limegreen', 'orchid'])
         for i, color in zip(range(n_classes), colors):
             plt.plot(
                 fpr[i],
                 tpr[i],
                 color=color,
                 lw=lw,
-                label="ROC curve of class {0} (area = {1:0.2f})".format(
-                    [name for name, id in classes.items() if id == i][0], roc_auc[i]),
-                # label="ROC curve of class {0} (area = {1:0.2f})".format(i, roc_auc[i]),
-            )
+                label="ROC curve of user {0} (area = {1:0.2f})".format(
+                    i, roc_auc[i]
 
+                    # [name for name, id in classes.items() if id == i][0], roc_auc[i]),
+                    # label="ROC curve of class {0} (area = {1:0.2f})".format(i, roc_auc[i]),
+                ))
 
     plt.plot([0, 1], [0, 1], "k--", lw=lw)
     plt.xlim([0.0, 1.0])
@@ -72,106 +75,29 @@ def draw_roc_curve(y_test, y_score, classes, plot_title, file_title=None, print_
     plt.xlabel("False Positive Rate", fontdict={'size': 8})
     plt.ylabel("True Positive Rate", fontdict={'size': 8})
     plt.title(plot_title, fontdict={'size': 10})
-    plt.legend(loc="lower right")
     plt.legend(loc="lower right", fontsize=8)
     if file_title is not None:
         plt.savefig(file_title)
     else:
         plt.show()
 
-# def draw_roc_curve(y_test, pred, classes, plot_title, file_title):
-#     lw = 2
-#     n_classes = len(classes)
-#     fpr, tpr, roc_auc = {}, {}, {}
-#     for i in range(n_classes):
-#         fpr[i], tpr[i], thresholds = roc_curve(y_test[:, i], pred[:, i])
-#         roc_auc[i] = auc(fpr[i], tpr[i])
-#     print(10 * '\n')
-#     print(fpr)
-#     print(10*'\n')
-#     print(tpr)
-#     print(10 * '\n')
-#     fpr["micro"], tpr["micro"], thresholds = roc_curve(y_test.ravel(), pred.ravel())
-#     roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
-#
-#     # First aggregate all false positive rates
-#     all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
-#
-#     # Then interpolate all ROC curves at this points
-#     mean_tpr = np.zeros_like(all_fpr)
-#     for i in range(n_classes):
-#         mean_tpr += np.interp(all_fpr, fpr[i], tpr[i])
-#
-#     # Plot all ROC curves
-#     plt.clf()
-#     plt.figure(figsize=(8, 6))
-#     plt.plot(
-#         fpr["micro"],
-#         tpr["micro"],
-#         label="average ROC curve (area = {0:0.2f})".format(roc_auc["micro"]),
-#         color="deeppink",
-#         linestyle='dotted',
-#         linewidth=5, marker='.'
-#     )
-#
-#     colors = cycle(["aqua", "darkorange", "cornflowerblue", 'r', 'g', 'b', 'y'])
-#     for i, color in zip(range(n_classes), colors):
-#         plt.plot(
-#             fpr[i],
-#             tpr[i],
-#             color=color,
-#             lw=lw, marker='.',
-#             label="ROC curve of class {0} (area = {1:0.2f})".format(
-#                 [name for name, id in classes.items() if id == i][0], roc_auc[i]),
-#         )
-#
-#     plt.plot([0, 1], [0, 1], "k--", lw=lw,  marker=".")
-#     plt.xlim([0.0, 1.0])
-#     plt.ylim([0.0, 1.05])
-#     plt.xlabel("False Positive Rate", fontdict=font_8)
-#     plt.ylabel("True Positive Rate", fontdict=font_8)
-#     plt.title(plot_title)
-#     plt.legend(loc="lower right", fontsize=8)
-#     plt.savefig(file_title)
-
-# def plot_result_nn(history, item, file_title = None):
-#     plt.clf()
-#     plt.figure(figsize=(8, 6))
-#
-#
-#
-#     plt.plot(history.history[item], label=item)
-#     plt.plot(history.history["val_" + item], label="val_" + item)
-#     plt.xlabel("Epochs".clf()
-#     plt.ylabel(item, 'FontSize', 9)
-#     plt.title("Train and Validation {} Over Epochs".format(item), fontsize=14)
-#     plt.legend(font_size=10)
-#     plt.grid()
-#     if file_title:
-#         plt.savefig(file_title)
-#     else:
-#         plt.show()
 
 def plot_result_nn(history, file_title=None):
     fig, axs = plt.subplots(2, 1)
     x = [k + 1 for k in range(len(history.history["loss"]))]
-    axs[0].plot(x, history.history["val_loss"], label="Validation data loss",  marker='.')
-    axs[0].plot(x, history.history["loss"], label="Train data loss",  marker='.')
+    axs[0].plot(x, history.history["val_loss"], color="lightseagreen", label="Validation data loss", marker='.')
+    axs[0].plot(x, history.history["loss"], color="fuchsia", label="Train data loss", marker='.')
     axs[0].set_title('Train and validation data loss over epochs.', fontsize=10)
     axs[0].set_ylabel('Data loss', fontsize=8)
     axs[0].legend(loc="upper right", fontsize=8)
-    axs[1].plot(x, history.history["val_accuracy"], label="Validation accuracy",  marker='.')
-    axs[1].plot(x, history.history["accuracy"], label="Train accuracy",  marker='.')
+    axs[1].plot(x, history.history["val_accuracy"], "lightseagreen", label="Validation accuracy", marker='.')
+    axs[1].plot(x, history.history["accuracy"], "fuchsia", label="Train accuracy", marker='.')
     axs[1].set_title('Train and validation accuracy over epochs.', fontsize=10)
     axs[1].set_ylabel('Accuracy', fontsize=8)
     axs[1].legend(loc="lower right", fontsize=8)
 
-
     for ax in axs.flat:
         ax.set(xlabel='Epochs')
-
-    # Hide x labels and tick labels for top plots and y ticks for right plots.
-    for ax in axs.flat:
         ax.label_outer()
     if file_title is not None:
         plt.savefig(file_title)
@@ -190,12 +116,13 @@ def plot_confusion_metrics(y_test, y_pred, labels: list, display_labels: list, f
     system_confusion_matrix = confusion_matrix(np.argmax(y_test, axis=1), np.argmax(y_pred, axis=1),
                                                labels=labels)
     cm_display = ConfusionMatrixDisplay(system_confusion_matrix, display_labels=display_labels)
-    fig, ax = plt.subplots(figsize=(10,10))
+    fig, ax = plt.subplots(figsize=(10, 10))
     cm_display.plot(cmap="RdYlGn", ax=ax)
     if file_title is not None:
         plt.savefig(file_title)
     else:
         plt.show()
+
 
 def hipotese_tests(true_y, pred_y):
     tp = TruePositives()
@@ -217,40 +144,80 @@ def hipotese_tests(true_y, pred_y):
     return tn, fp, fn, tp
 
 
-def find_EER(far, frr):
+def find_eer(far, frr):
     x = np.absolute((np.array(far) - np.array(frr)))
 
     y = np.nanargmin(x)
     # print("index of min difference=", y)
     far_optimum = far[y]
     frr_optimum = frr[y]
-    return (np.nanargmin(x), max(far_optimum, frr_optimum))
+    return [np.nanargmin(x), max(far_optimum, frr_optimum)]
 
 
-def draw_far_frr (y_test, y_pred, file_title=None):
+def calculate_far_frr_eer(y_test, y_pred, bins=100):
     frr, far = [], []
-    bins = 100
-    threshold = [k/bins for k in range(bins+1)]
+    threshold = [k / bins for k in range(bins + 1)]
     for thresh in threshold:
-        far_counter, frr_counter = 0,0
+        far_counter, frr_counter = 0, 0
         for k in range(y_pred.shape[0]):
             y_prediction, true = y_pred[k], y_test[k]
             if y_prediction.max() > thresh and np.argmax(y_prediction) != np.argmax(true):
                 far_counter += 1
             if y_prediction.max() < thresh and np.argmax(y_prediction) == np.argmax(true):
                 frr_counter += 1
-        far.append(far_counter/y_pred.shape[0])
-        frr.append(frr_counter/y_pred.shape[0])
-    eer = find_EER(far, frr)
-    fig, ax = plt.subplots()
-    ax.plot(threshold, far, 'r--', label='FAR')
-    ax.plot(threshold, frr, 'g--', label='FRR')
+        far.append(far_counter / y_pred.shape[0])
+        frr.append(frr_counter / y_pred.shape[0])
+    eer = find_eer(far, frr)
+    eer[0] = eer[0] / bins
+    return far, frr, eer, threshold
+
+
+def draw_far_frr(far, frr, eer, threshold, plot_title=None, file_title=None):
+    fig = plt.figure()
+    ax = plt.subplot(111)
+    ax.plot(threshold, far, color='pink', label='FAR (False Acceptance Rate)', linewidth=2)
+    ax.plot(threshold, frr, color='steelblue', label='FRR (False Rejection Rate)', linewidth=2)
     plt.xlabel('Threshold')
-    plt.plot(eer[0]/bins, eer[1], 'ro', label='EER')
-    ax.legend(loc='upper center', shadow=True, fontsize='x-large')
+    plt.ylabel('Percentage of tries')
+    plt.plot(eer[0], eer[1], color='red', marker='o')
+    plt.text(eer[0], eer[1], '    EER (Equal Error Rate)', fontdict={'size': 6})
+    ax.legend(bbox_to_anchor=(1, 0), loc="lower right",
+              bbox_transform=fig.transFigure, ncol=3, fontsize=8)
+    if plot_title is not None:
+        ax.set_title(plot_title)
     if file_title is not None:
         plt.savefig(file_title)
     else:
         plt.show()
 
 
+def draw_system_t_roc_curve(far, frr, eer, plot_title=None, file_title=None):
+    plt.figure()
+    plt.plot(frr, far, color='steelblue', linewidth=2)
+    plt.xlabel('FRR (False Rejection Rate)')
+    plt.ylabel('FAR (False Acceptance Rate)')
+    plt.plot(eer[1], eer[1], color='red', marker='o', label='EER')
+    plt.text(eer[1], eer[1], '  EER (Equal Error Rate)', fontdict={'size': 7})
+    if plot_title is not None:
+        plt.title(plot_title)
+    if file_title is not None:
+        plt.savefig(file_title)
+    else:
+        plt.show()
+
+
+def draw_system_roc_curve(far, frr, eer, plot_title=None, file_title=None):
+    plt.figure()
+    tpr = 1 - np.array(frr)
+    plt.plot(np.append(far, 0.0), np.append(tpr, 0.0), color='steelblue', linewidth=2)
+    plt.plot(far, far, color='grey', linestyle='dashed')
+    plt.ylabel('True Positive Rate')
+    plt.xlabel('False Positive Rate')
+    plt.plot(eer[1], 1.0 - eer[1], color='red', marker='o', label='EER')
+    plt.text(eer[1], 1.0 - eer[1], '  EER (Equal Error Rate)', fontdict={'size': 7})
+    if plot_title is not None:
+        plt.title(plot_title)
+    if file_title is not None:
+        plt.savefig(file_title)
+    else:
+        plt.show()
