@@ -1,3 +1,5 @@
+from csv import DictWriter
+import os
 from create_model import cols
 from sklearn.metrics import roc_curve, auc, confusion_matrix, ConfusionMatrixDisplay
 from itertools import cycle
@@ -221,3 +223,11 @@ def draw_system_roc_curve(far, frr, eer, plot_title=None, file_title=None):
         plt.savefig(file_title)
     else:
         plt.show()
+
+
+def save_to_csv(file_path: str, my_dict: dict):
+    with open(file_path, 'a+', encoding='utf-8') as file:
+        w = DictWriter(file, my_dict.keys())
+        if file.tell() == 0:
+            w.writeheader()
+        w.writerow(my_dict)

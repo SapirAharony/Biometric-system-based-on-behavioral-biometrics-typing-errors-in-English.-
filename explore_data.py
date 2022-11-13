@@ -15,3 +15,4 @@ def plot_df(df: pd.DataFrame, path_to_save: str, amount_of_labels: int = 3):
         plt.savefig(path_to_save + 'orig\\' + col + '.png')
 
 
+
